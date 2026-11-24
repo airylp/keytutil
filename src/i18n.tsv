@@ -1,0 +1,281 @@
+Ajustes	Settings	Réglages
+Versión {v}	Version {v}	Version {v}
+⟳ Buscar actualizaciones…	⟳ Check for updates…	⟳ Rechercher des mises à jour…
+↺ Restablecer	↺ Reset	↺ Réinitialiser
+Vuelve a los ajustes predeterminados	Go back to the default settings	Revenir aux réglages par défaut
+Los cambios se aplican y se guardan solos.	Changes are applied and saved automatically.	Les modifications sont appliquées et enregistrées automatiquement.
+Idioma	Language	Langue
+Tema	Theme	Thème
+Sistema	System	Système
+Claro	Light	Clair
+Oscuro	Dark	Sombre
+Autor	Author	Auteur
+Sitio web	Website	Site web
+Licencia	License	Licence
+MIT · © 2026 {user}	MIT · © 2026 {user}	MIT · © 2026 {user}
+ver	view	voir
+Hecho con	Made with	Fait avec
+Versiones	Releases	Versions
+Reportar un problema	Report a problem	Signaler un problème
+Código fuente	Source code	Code source
+Buscar actualizaciones…	Check for updates…	Rechercher des mises à jour…
+Cerrar	Close	Fermer
+Abrir carpeta	Open folder	Ouvrir le dossier
+Configuración	Configuration	Configuration
+Visor y editor de archivos de varios GB	Viewer and editor for multi-GB files	Visionneuse et éditeur de fichiers de plusieurs Go
+Probador de conexiones JDBC con consola SQL	JDBC connection tester with SQL console	Testeur de connexions JDBC avec console SQL
+Cliente HTTP y SOAP para probar APIs	HTTP and SOAP client for testing APIs	Client HTTP et SOAP pour tester des API
+General	General	Général
+Actualizar {app}	Update {app}	Mettre à jour {app}
+Versión instalada: {v}	Installed version: {v}	Version installée : {v}
+Buscando la última versión en GitHub…	Looking for the latest version on GitHub…	Recherche de la dernière version sur GitHub…
+✔ Ya tienes la última versión ({v}).	✔ You already have the latest version ({v}).	✔ Vous avez déjà la dernière version ({v}).
+Reinstalar de todos modos	Reinstall anyway	Réinstaller quand même
+Hay una versión nueva: {v}	A new version is available: {v}	Une nouvelle version est disponible : {v}
+Se descarga el instalador; al reiniciar, {app} se cierra, se instala la versión nueva y vuelve a abrirse.	The installer is downloaded; on restart, {app} closes, the new version is installed and it opens again.	L'installateur est téléchargé ; au redémarrage, {app} se ferme, la nouvelle version s'installe et se rouvre.
+Se descarga el código, se compila (la primera vez tarda unos minutos) y se reemplaza la app instalada. Puedes seguir usando {app} mientras tanto.	The source is downloaded, built (the first time takes a few minutes) and the installed app is replaced. You can keep using {app} meanwhile.	Le code est téléchargé, compilé (la première fois prend quelques minutes) et l'app installée est remplacée. Vous pouvez continuer à utiliser {app} pendant ce temps.
+Se descarga la versión publicada y se reemplaza la app instalada. Puedes seguir usando {app} mientras tanto.	The published version is downloaded and replaces the installed app. You can keep using {app} meanwhile.	La version publiée est téléchargée et remplace l'app installée. Vous pouvez continuer à utiliser {app} pendant ce temps.
+Actualizar ahora	Update now	Mettre à jour maintenant
+Actualizando… (puedes seguir trabajando)	Updating… (you can keep working)	Mise à jour… (vous pouvez continuer à travailler)
+✔ Versión nueva instalada.	✔ New version installed.	✔ Nouvelle version installée.
+Reiniciar ahora	Restart now	Redémarrer maintenant
+o úsala la próxima vez que abras {app}	or use it next time you open {app}	ou utilisez-la la prochaine fois que vous ouvrirez {app}
+No se pudo actualizar: {e}	Could not update: {e}	Impossible de mettre à jour : {e}
+Reintentar	Retry	Réessayer
+Registro:	Log:	Journal :
+Hay una versión nueva ({v}): clic para actualizar	A new version is available ({v}): click to update	Une nouvelle version est disponible ({v}) : cliquez pour mettre à jour
+Buscar actualizaciones · versión {v}	Check for updates · version {v}	Rechercher des mises à jour · version {v}
+Atajos de teclado	Keyboard shortcuts	Raccourcis clavier
+Cerrar la ventana de delante	Close the front window	Fermer la fenêtre au premier plan
+Acerca de {app}	About {app}	À propos de {app}
+Atajos de teclado (F1)	Keyboard shortcuts (F1)	Raccourcis clavier (F1)
+no se pudo	could not	impossible
+Clic para cerrar	Click to close	Cliquer pour fermer
+Abrir	Open	Ouvrir
+Abrir…	Open…	Ouvrir…
+Aceptar	OK	Valider
+Actualizaciones	Updates	Mises à jour
+Avisar de versiones nuevas (punto verde en ⬇; mira GitHub al abrir y cada 6 horas)	Notify about new versions (green dot on ⬇; checks GitHub at startup and every 6 hours)	Signaler les nouvelles versions (point vert sur ⬇ ; consulte GitHub au démarrage et toutes les 6 heures)
+Buscar	Search	Rechercher
+Cambios sin guardar	Unsaved changes	Modifications non enregistrées
+Cancelar	Cancel	Annuler
+Contraseña	Password	Mot de passe
+Copiar	Copy	Copier
+Crear	Create	Créer
+Descartar	Discard	Abandonner
+Exportar…	Export…	Exporter…
+Formato	Format	Format
+Guardar	Save	Enregistrer
+Guardar como…	Save as…	Enregistrer sous…
+Guardar en otro archivo…	Save to another file…	Enregistrer dans un autre fichier…
+No se pudo abrir la versión nueva: {e}	Could not open the new version: {e}	Impossible d'ouvrir la nouvelle version : {e}
+No se pudo abrir {f}: {e}	Could not open {f}: {e}	Impossible d'ouvrir {f} : {e}
+No se pudo exportar: {e}	Could not export: {e}	Impossible d'exporter : {e}
+No se pudo guardar: {e}	Could not save: {e}	Impossible d'enregistrer : {e}
+Nuevo	New	Nouveau
+Quitar	Remove	Retirer
+Ruta copiada	Path copied	Chemin copié
+Servidor	Server	Serveur
+Tipo	Type	Type
+Todos	All	Tous
+falló (mira el registro)	failed (see the log)	échec (voir le journal)
+no hay instalador publicado	no published installer	aucun installateur publié
+no se pudo consultar GitHub: {e}	could not query GitHub: {e}	impossible d’interroger GitHub : {e}
+no se pudo descargar: {e}	could not download: {e}	téléchargement impossible : {e}
+no se pudo ejecutar curl: {e}	could not run curl: {e}	impossible d'exécuter curl : {e}
+no se pudo iniciar: {e}	could not start: {e}	impossible de démarrer : {e}
+respuesta inesperada de GitHub	unexpected response from GitHub	réponse inattendue de GitHub
+terminó sin instalar la app	finished without installing the app	terminé sans installer l'app
+{v} (compilación local)	{v} (local build)	{v} (compilation locale)
+● sin guardar	● unsaved	● non enregistré
+ (si ese puerto empieza en claro, como un servidor de correo, prueba con STARTTLS)	 (if that port starts in plain text, like a mail server, try STARTTLS)	 (si ce port commence en clair, comme un serveur de messagerie, essayez STARTTLS)
+(certificado ilegible)	(unreadable certificate)	(certificat illisible)
+(clave secreta)	(secret key)	(clé secrète)
+(nuevo almacén)	(new keystore)	(nouveau magasin)
+Abierto sin comprobar la contraseña: se pedirá al guardar.	Opened without checking the password: it will be asked when saving.	Ouvert sans vérifier le mot de passe : il sera demandé à l'enregistrement.
+Abre primero un almacén (o crea uno nuevo) para agregar certificados.	Open a keystore first (or create a new one) to add certificates.	Ouvrez d'abord un magasin (ou créez-en un) pour ajouter des certificats.
+Abrir almacén	Open keystore	Ouvrir un magasin
+Abrir almacén…	Open keystore…	Ouvrir un magasin…
+Abrir el almacén o agregar el certificado	Open the keystore or add the certificate	Ouvrir le magasin ou ajouter le certificat
+Abrir sin contraseña	Open without password	Ouvrir sans mot de passe
+Abrir un almacén	Open a keystore	Ouvrir un magasin
+Abrir un almacén JKS o PKCS12 (Ctrl+O)	Open a JKS or PKCS12 keystore (Ctrl+O)	Ouvrir un magasin JKS ou PKCS12 (Ctrl+O)
+Agregado	Added	Ajouté
+Agregados {n} certificados. Guarda (Ctrl+S) para escribirlos en el archivo.	Added {n} certificates. Save (Ctrl+S) to write them to the file.	{n} certificats ajoutés. Enregistrez (Ctrl+S) pour les écrire dans le fichier.
+Agregar certificados	Add certificates	Ajouter des certificats
+Agregar certificados de un archivo .pem, .crt, .cer o .der (también se pueden arrastrar o pegar con Ctrl+V)	Add certificates from a .pem, .crt, .cer or .der file (you can also drag them or paste with Ctrl+V)	Ajouter des certificats depuis un fichier .pem, .crt, .cer ou .der (on peut aussi les glisser ou coller avec Ctrl+V)
+Agregar de un servidor	Add from a server	Ajouter depuis un serveur
+Agregar los certificados PEM copiados	Add the copied PEM certificates	Ajouter les certificats PEM copiés
+Agregar {n} al almacén	Add {n} to the keystore	Ajouter {n} au magasin
+Alias	Alias	Alias
+Alias:	Alias:	Alias :
+Almacenes y certificados	Keystores and certificates	Magasins et certificats
+Almacén	Keystore	Magasin
+Antes de guardar, copiar el archivo original a la carpeta de respaldos	Before saving, copy the original file to the backups folder	Avant d'enregistrer, copier le fichier d'origine dans le dossier de sauvegardes
+Arrastrar un archivo	Drag a file	Glisser un fichier
+Automático (por puerto)	Automatic (by port)	Automatique (selon le port)
+Buscar (alias, nombre, emisor, huella)…	Search (alias, name, issuer, fingerprint)…	Rechercher (alias, nom, émetteur, empreinte)…
+Buscar otra vez	Search again	Rechercher à nouveau
+Cadena ({n} certificados)	Chain ({n} certificates)	Chaîne ({n} certificats)
+Cambiar el alias	Change the alias	Changer l'alias
+Certificado de confianza	Trusted certificate	Certificat de confiance
+Certificados	Certificates	Certificats
+Certificados de confianza de Java (cacerts)	Java trusted certificates (cacerts)	Certificats de confiance Java (cacerts)
+Clave	Key	Clé
+Clave privada con su cadena (se conserva tal cual)	Private key with its chain (kept as is)	Clé privée avec sa chaîne (conservée telle quelle)
+Clave secreta (se conserva tal cual)	Secret key (kept as is)	Clé secrète (conservée telle quelle)
+Clic: cambiar la contraseña del almacén	Click: change the keystore password	Clic : changer le mot de passe du magasin
+Clic: copiar la ruta	Click: copy the path	Clic : copier le chemin
+Consejo: agrega la autoridad (intermedio o raíz) en vez del certificado del servidor; así sigue valiendo cuando el servidor lo renueve.	Tip: add the authority (intermediate or root) instead of the server certificate; it keeps working when the server renews it.	Conseil : ajoutez l'autorité (intermédiaire ou racine) plutôt que le certificat du serveur ; il restera valable quand le serveur le renouvellera.
+Consultar	Fetch	Interroger
+Contraseña comprobada	Password verified	Mot de passe vérifié
+Contraseña con la que guardar el almacén:	Password to save the keystore with:	Mot de passe pour enregistrer le magasin :
+Contraseña del almacén	Keystore password	Mot de passe du magasin
+Contraseña sin comprobar	Password not verified	Mot de passe non vérifié
+Copia de seguridad	Backup	Sauvegarde
+Copiar PEM	Copy PEM	Copier le PEM
+Copiar huella SHA-256	Copy SHA-256 fingerprint	Copier l'empreinte SHA-256
+Crear un almacén vacío	Create an empty keystore	Créer un magasin vide
+DER (binario, uno solo)	DER (binary, single)	DER (binaire, un seul)
+De un archivo o texto	From a file or text	Depuis un fichier ou du texte
+De un archivo…	From a file…	Depuis un fichier…
+De un servidor	From a server	Depuis un serveur
+De un servidor…	From a server…	Depuis un serveur…
+Desmarcar	Uncheck	Décocher
+El almacén está vacío: agrega certificados de un servidor o de un archivo.	The keystore is empty: add certificates from a server or a file.	Le magasin est vide : ajoutez des certificats depuis un serveur ou un fichier.
+El almacén tiene cambios sin guardar.	The keystore has unsaved changes.	Le magasin a des modifications non enregistrées.
+El cacerts de un Java instalado en el sistema suele ser del administrador.	The cacerts of a system-wide Java usually belongs to the administrator.	Le cacerts d'un Java installé pour le système appartient généralement à l'administrateur.
+El de Java 9 en adelante (recomendado)	Used by Java 9 and later (recommended)	Celui de Java 9 et suivants (recommandé)
+Elegir archivo…	Choose file…	Choisir un fichier…
+Elige un certificado para ver su detalle.	Choose a certificate to see its details.	Choisissez un certificat pour voir ses détails.
+Emitido para	Issued to	Délivré à
+Emitido por	Issued by	Délivré par
+Error	Error	Erreur
+Escribe la contraseña del almacén para guardarlo.	Type the keystore password to save it.	Saisissez le mot de passe du magasin pour l'enregistrer.
+Exportados {n} certificados a {f}	Exported {n} certificates to {f}	{n} certificats exportés vers {f}
+Exportar certificados	Export certificates	Exporter des certificats
+Exportar los marcados	Export the checked ones	Exporter les cochés
+Firma	Signature	Signature
+Guardado	Saving	Enregistrement
+Guardado: {f}	Saved: {f}	Enregistré : {f}
+Guardar almacén como	Save keystore as	Enregistrer le magasin sous
+Guardar como (otro formato o contraseña)	Save as (another format or password)	Enregistrer sous (autre format ou mot de passe)
+Guardar como administrador	Save as administrator	Enregistrer en tant qu'administrateur
+Guardar en otro archivo, otro formato (JKS/PKCS12) u otra contraseña (Ctrl+Shift+S)	Save to another file, format (JKS/PKCS12) or password (Ctrl+Shift+S)	Enregistrer dans un autre fichier, format (JKS/PKCS12) ou mot de passe (Ctrl+Shift+S)
+Guardar los cambios en el archivo (Ctrl+S)	Save the changes to the file (Ctrl+S)	Enregistrer les modifications dans le fichier (Ctrl+S)
+Guardar los marcados en un archivo PEM (Ctrl+E)	Save the checked ones to a PEM file (Ctrl+E)	Enregistrer les cochés dans un fichier PEM (Ctrl+E)
+Hacen falta permisos	Permissions needed	Autorisations nécessaires
+Hay cambios sin guardar en el almacén: guárdalos antes de reiniciar.	The keystore has unsaved changes: save them before restarting.	Le magasin a des modifications non enregistrées : enregistrez-les avant de redémarrer.
+Huella copiada	Fingerprint copied	Empreinte copiée
+Intermedio	Intermediate	Intermédiaire
+JKS o PKCS12 (cacerts, truststore, keystore)	JKS or PKCS12 (cacerts, truststore, keystore)	JKS ou PKCS12 (cacerts, truststore, keystore)
+Java no confiaría en este servidor: {m}	Java would not trust this server: {m}	Java ne ferait pas confiance à ce serveur : {m}
+Java ya confía en este servidor con este almacén.	Java already trusts this server with this keystore.	Java fait déjà confiance à ce serveur avec ce magasin.
+Java ▾	Java ▾	Java ▾
+La de fábrica del cacerts de Java es «changeit».	The default one for Java's cacerts is "changeit".	Celui par défaut du cacerts de Java est « changeit ».
+Las aplicaciones Java dejarán de confiar en los servidores que dependan de ellos. El archivo no cambia hasta guardar.	Java applications will stop trusting servers that depend on them. The file does not change until you save.	Les applications Java ne feront plus confiance aux serveurs qui en dépendent. Le fichier ne change pas avant l'enregistrement.
+Las aplicaciones Java que usan este almacén deben conocer la contraseña (javax.net.ssl.trustStorePassword).	Java applications using this keystore must know the password (javax.net.ssl.trustStorePassword).	Les applications Java qui utilisent ce magasin doivent connaître le mot de passe (javax.net.ssl.trustStorePassword).
+Las claves privadas solo se pueden guardar en su formato original.	Private keys can only be saved in their original format.	Les clés privées ne peuvent être enregistrées que dans leur format d'origine.
+Los cacerts de los Java instalados y los almacenes recientes	The cacerts of installed Java versions and recent keystores	Les cacerts des Java installés et les magasins récents
+Marca casillas para exportar o quitar varios a la vez.	Check boxes to export or remove several at once.	Cochez des cases pour exporter ou retirer plusieurs à la fois.
+Marcar los visibles	Check the visible ones	Cocher les visibles
+Marcar los {n} vencidos	Check the {n} expired	Cocher les {n} expirés
+Marcar o desmarcar los visibles (Ctrl+A)	Check or uncheck the visible ones (Ctrl+A)	Cocher ou décocher les visibles (Ctrl+A)
+Mostrar u ocultar	Show or hide	Afficher ou masquer
+N.º de serie	Serial number	N° de série
+Ningún almacén abierto	No keystore open	Aucun magasin ouvert
+Ningún certificado coincide con la búsqueda.	No certificate matches the search.	Aucun certificat ne correspond à la recherche.
+No se encontró ningún Java instalado	No installed Java found	Aucun Java installé trouvé
+No se encontró ningún Java instalado: abre el cacerts a mano o arrastra aquí un archivo.	No installed Java found: open the cacerts manually or drag a file here.	Aucun Java installé trouvé : ouvrez le cacerts manuellement ou glissez un fichier ici.
+No se pudo hacer la copia de seguridad: {e}	Could not make the backup: {e}	Impossible de faire la sauvegarde : {e}
+No se pudo leer {f}: {e}	Could not read {f}: {e}	Impossible de lire {f} : {e}
+No tienes permiso para escribir en {f}.	You don't have permission to write {f}.	Vous n'avez pas l'autorisation d'écrire {f}.
+Nombres	Names	Noms
+Nueva contraseña (se aplica al guardar):	New password (applied when saving):	Nouveau mot de passe (appliqué à l'enregistrement) :
+Nuevo almacén	New keystore	Nouveau magasin
+PEM copiado	PEM copied	PEM copié
+Para Java 8 y anteriores	For Java 8 and earlier	Pour Java 8 et antérieurs
+Quitados {n} certificados (falta guardar)	Removed {n} certificates (not saved yet)	{n} certificats retirés (à enregistrer)
+Quitar certificados	Remove certificates	Retirer des certificats
+Quitar los marcados (o el elegido)	Remove the checked ones (or the selected one)	Retirer les cochés (ou celui choisi)
+Quitar los marcados del almacén (Supr)	Remove the checked ones from the keystore (Del)	Retirer les cochés du magasin (Suppr)
+Quitar…	Remove…	Retirer…
+Raíz	Root	Racine
+Recientes	Recent	Récents
+Respaldos	Backups	Sauvegardes
+Se abrió sin contraseña: clic para escribirla (hace falta para guardar)	Opened without password: click to type it (needed to save)	Ouvert sans mot de passe : cliquez pour le saisir (nécessaire pour enregistrer)
+Sistema (ca-certificates-java)	System (ca-certificates-java)	Système (ca-certificates-java)
+Solo JKS: se ven los certificados, pero hará falta la contraseña para guardar	JKS only: certificates are shown, but the password will be needed to save	JKS uniquement : les certificats sont visibles, mais le mot de passe sera nécessaire pour enregistrer
+Supr	Del	Suppr
+TLS directo	Direct TLS	TLS direct
+También puedes arrastrar aquí un almacén o un certificado.	You can also drag a keystore or a certificate here.	Vous pouvez aussi glisser ici un magasin ou un certificat.
+Traer los certificados de un servidor (HTTPS, correo, LDAPS, base de datos…) y agregarlos (Ctrl+L)	Fetch a server's certificates (HTTPS, mail, LDAPS, database…) and add them (Ctrl+L)	Récupérer les certificats d'un serveur (HTTPS, messagerie, LDAPS, base de données…) et les ajouter (Ctrl+L)
+Un PKCS12 no se puede leer sin su contraseña.	A PKCS12 cannot be read without its password.	Un PKCS12 ne peut pas être lu sans son mot de passe.
+Un almacén vacío al que agregar certificados	An empty keystore to add certificates to	Un magasin vide où ajouter des certificats
+Vence	Expires	Expire
+Vencido: {t}	Expired: {t}	Expiré : {t}
+Vigente	Valid	Valide
+Vigente, {t}	Valid, {t}	Valide, {t}
+Válido desde	Valid from	Valide depuis
+Válido hasta	Valid until	Valide jusqu'au
+Ya está en el almacén como «{a}»	Already in the keystore as "{a}"	Déjà dans le magasin sous « {a} »
+\nTambién lo usan: {l}	\nAlso used by: {l}	\nÉgalement utilisé par : {l}
+archivo JKS dañado o incompleto	damaged or incomplete JKS file	fichier JKS endommagé ou incomplet
+autofirmado (raíz)	self-signed (root)	auto-signé (racine)
+autoridad (CA)	authority (CA)	autorité (CA)
+cacerts de {j}	cacerts of {j}	cacerts de {j}
+certificado no válido: {e}	invalid certificate: {e}	certificat invalide : {e}
+contraseña incorrecta	wrong password	mot de passe incorrect
+dirección IPv6 mal escrita	malformed IPv6 address	adresse IPv6 mal écrite
+el almacén no tiene certificados de confianza	the keystore has no trusted certificates	le magasin n'a aucun certificat de confiance
+el certificado aún no es válido	the certificate is not valid yet	le certificat n'est pas encore valide
+el certificado del servidor está vencido	the server certificate has expired	le certificat du serveur a expiré
+el certificado no es para ese nombre de host	the certificate is not for that host name	le certificat ne correspond pas à ce nom d'hôte
+el puerto no es válido	the port is not valid	le port n'est pas valide
+el servidor cerró la conexión antes de pasar a TLS	the server closed the connection before switching to TLS	le serveur a fermé la connexion avant de passer en TLS
+el servidor no aceptó STARTTLS ({p}, {s}): {l}	the server did not accept STARTTLS ({p}, {s}): {l}	le serveur n'a pas accepté STARTTLS ({p}, {s}) : {l}
+el servidor no presentó ningún certificado	the server presented no certificate	le serveur n'a présenté aucun certificat
+el servidor {p} mandó datos inesperados después de aceptar STARTTLS	the {p} server sent unexpected data after accepting STARTTLS	le serveur {p} a envoyé des données inattendues après avoir accepté STARTTLS
+emitido por {i}	issued by {i}	délivré par {i}
+es un almacén JCEKS; conviértelo a PKCS12 con keytool -importkeystore	it is a JCEKS keystore; convert it to PKCS12 with keytool -importkeystore	c'est un magasin JCEKS ; convertissez-le en PKCS12 avec keytool -importkeystore
+escribe una URL o un host	type a URL or a host	saisissez une URL ou un hôte
+esquema no admitido: {s}://	unsupported scheme: {s}://	schéma non pris en charge : {s}://
+falta el alias	the alias is missing	l'alias manque
+falta un host válido	a valid host is missing	il manque un hôte valide
+hace falta una contraseña para guardar el almacén	a password is needed to save the keystore	un mot de passe est nécessaire pour enregistrer le magasin
+http:// no usa certificados; ¿querías https://?	http:// uses no certificates; did you mean https://?	http:// n'utilise pas de certificats ; vouliez-vous dire https:// ?
+las claves de un PKCS12 no se pueden pasar a JKS; guárdalo como PKCS12	keys from a PKCS12 cannot be moved to JKS; save it as PKCS12	les clés d'un PKCS12 ne peuvent pas passer en JKS ; enregistrez-le en PKCS12
+las claves privadas de un JKS no se pueden pasar a PKCS12; guárdalo como JKS	private keys from a JKS cannot be moved to PKCS12; save it as JKS	les clés privées d'un JKS ne peuvent pas passer en PKCS12 ; enregistrez-le en JKS
+ningún certificado del almacén respalda esta cadena	no certificate in the keystore backs this chain	aucun certificat du magasin ne valide cette chaîne
+no es un almacén JKS ni PKCS12 válido ({e})	not a valid JKS or PKCS12 keystore ({e})	ce n'est pas un magasin JKS ou PKCS12 valide ({e})
+no existe «{a}»	"{a}" does not exist	« {a} » n'existe pas
+no se completó el saludo TLS: {e}{h}	the TLS handshake did not complete: {e}{h}	la négociation TLS n'a pas abouti : {e}{h}
+no se encontró ningún certificado (se esperaba PEM o DER)	no certificate found (PEM or DER expected)	aucun certificat trouvé (PEM ou DER attendu)
+no se encontró {h}: {e}	{h} not found: {e}	{h} introuvable : {e}
+no se guardó (¿se canceló la contraseña de administrador?)	not saved (was the administrator password cancelled?)	non enregistré (le mot de passe administrateur a-t-il été annulé ?)
+no se pudo conectar a {h}:{p}: {e}	could not connect to {h}:{p}: {e}	impossible de se connecter à {h}:{p} : {e}
+no se pudo generar el PKCS12: {e}	could not generate the PKCS12: {e}	impossible de générer le PKCS12 : {e}
+no se pudo pedir permisos de administrador: {e}	could not request administrator permissions: {e}	impossible de demander les droits administrateur : {e}
+o pega uno o varios certificados PEM:	or paste one or more PEM certificates:	ou collez un ou plusieurs certificats PEM :
+saludo	greeting	accueil
+se cortó la conexión con el servidor: {e}	the connection to the server was cut: {e}	la connexion au serveur a été coupée : {e}
+servidor.ejemplo.com, https://…, smtp://…:587, jdbc:…	server.example.com, https://…, smtp://…:587, jdbc:…	serveur.exemple.com, https://…, smtp://…:587, jdbc:…
+texto pegado	pasted text	texte collé
+tipo de entrada JKS desconocido ({t})	unknown JKS entry type ({t})	type d'entrée JKS inconnu ({t})
+un bloque PEM tiene base64 inválido	a PEM block has invalid base64	un bloc PEM a un base64 invalide
+vence en {n} días	expires in {n} days	expire dans {n} jours
+venció hace {n} días	expired {n} days ago	expiré depuis {n} jours
+versión de JKS no admitida ({v})	unsupported JKS version ({v})	version JKS non prise en charge ({v})
+ya existe	already exists	existe déjà
+ya hay una entrada «{a}»	there is already an entry "{a}"	il y a déjà une entrée « {a} »
+{f} está protegido con contraseña (la de fábrica de Java, «changeit», no sirvió).	{f} is password-protected (Java's default, "changeit", did not work).	{f} est protégé par mot de passe (celui par défaut de Java, « changeit », n'a pas fonctionné).
+{h}:{p} · {pr} · el servidor mandó {n} certificados	{h}:{p} · {pr} · the server sent {n} certificates	{h}:{p} · {pr} · le serveur a envoyé {n} certificats
+{n} años	{n} years	{n} ans
+{n} certificados	{n} certificates	{n} certificats
+{n} certificados de {s}	{n} certificates from {s}	{n} certificats de {s}
+{n} marcados	{n} checked	{n} cochés
+{n} vencidos	{n} expired	{n} expirés
+· vence {f} ({t})	· expires {f} ({t})	· expire le {f} ({t})
+¿Quitar {n} certificados del almacén?	Remove {n} certificates from the keystore?	Retirer {n} certificats du magasin ?
+… y {n} más	… and {n} more	… et {n} de plus
+{n} días	{n} days	{n} jours
