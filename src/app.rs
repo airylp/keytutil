@@ -1195,15 +1195,27 @@ impl App {
                 let mut open = true;
                 let mut ok = false;
                 let has_keys = self.doc.as_ref().is_some_and(|d| d.ks.entries.iter().any(|e| e.kind != Kind::Trusted));
+                // Formato con el que se abrió (o guardó) el almacén: se señala en las opciones.
+                let current = (!new).then(|| self.doc.as_ref().map(|d| d.ks.format)).flatten();
+                let label = |f: Format| if current == Some(f) { tf!("{f} (el actual)", f = f.name()) } else { f.name().to_string() };
                 modal(if new { t!("Nuevo almacén") } else { t!("Guardar almacén como") }).open(&mut open).show(ctx, |ui| {
                     ui.set_width(420.0);
                     Grid::new("guardar_como").num_columns(2).spacing([12.0, 10.0]).show(ui, |ui| {
                         ui.strong(t!("Formato"));
                         ui.horizontal(|ui| {
-                            ui.radio_value(format, Format::Pkcs12, "PKCS12").on_hover_text(t!("El de Java 9 en adelante (recomendado)"));
-                            ui.radio_value(format, Format::Jks, "JKS").on_hover_text(t!("Para Java 8 y anteriores"));
+                            ui.radio_value(format, Format::Pkcs12, label(Format::Pkcs12)).on_hover_text(t!("El de Java 9 en adelante (recomendado)"));
+                            ui.radio_value(format, Format::Jks, label(Format::Jks)).on_hover_text(t!("Para Java 8 y anteriores"));
                         });
                         ui.end_row();
+                        if let Some(c) = current {
+                            ui.label("");
+                            if *format == c {
+                                ui.weak(tf!("El almacén ya es {f}: se guarda en el mismo formato.", f = c.name()));
+                            } else {
+                                ui.colored_label(colors(ui).1, tf!("Se convertirá de {a} a {b}.", a = c.name(), b = format.name()));
+                            }
+                            ui.end_row();
+                        }
                         ui.strong(t!("Contraseña"));
                         ui.add(TextEdit::singleline(password).desired_width(220.0));
                         ui.end_row();
@@ -1676,6 +1688,11 @@ impl App {
             }
             if std::env::var_os("KEYTUTIL_AJUSTES").is_some() {
                 self.dialog = Some(Dialog::Settings);
+            }
+            if std::env::var_os("KEYTUTIL_GUARDAR_COMO").is_some() {
+                if let Some(d) = &self.doc {
+                    self.dialog = Some(Dialog::SaveAs { format: d.ks.format, password: d.password.clone() });
+                }
             }
             if let Ok(f) = std::env::var("KEYTUTIL_BUSCAR") {
                 self.filter = f;

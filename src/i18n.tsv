@@ -280,3 +280,6 @@ ya hay una entrada «{a}»	there is already an entry "{a}"	il y a déjà une ent
 … y {n} más	… and {n} more	… et {n} de plus
 {n} días	{n} days	{n} jours
 Agregado en esta sesión	Added in this session	Ajouté pendant cette session
+{f} (el actual)	{f} (current)	{f} (actuel)
+El almacén ya es {f}: se guarda en el mismo formato.	The keystore is already {f}: it is saved in the same format.	Le magasin est déjà en {f} : il est enregistré dans le même format.
+Se convertirá de {a} a {b}.	It will be converted from {a} to {b}.	Il sera converti de {a} en {b}.
