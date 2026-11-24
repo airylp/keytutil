@@ -557,7 +557,7 @@ impl App {
                 self.pick(Pick::Open, &ctx);
             }
             let mut open = None;
-            ui.menu_button(RichText::new(t!("Java ▾")), |ui| {
+            ui.menu_button(RichText::new(t!("Java ⏷")), |ui| {
                 if self.java.is_empty() {
                     ui.weak(t!("No se encontró ningún Java instalado"));
                 }

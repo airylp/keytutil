@@ -55,5 +55,5 @@ fn main() -> eframe::Result {
         persist_window: !testing,
         ..Default::default()
     };
-    eframe::run_native("keytutil", options, Box::new(move |cc| Ok(Box::new(app::App::new(cc, open)))))
+    estilo::arrancar("keytutil", options, Box::new(move |cc| Ok(Box::new(app::App::new(cc, open)))))
 }
