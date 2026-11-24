@@ -15,7 +15,7 @@ curl -fsSL https://raw.githubusercontent.com/airylp/keytutil/main/install.sh | s
 Windows (PowerShell):
 
 ```powershell
-irm https://raw.githubusercontent.com/airylp/keytutil/main/install.ps1 | iex
+[Net.ServicePointManager]::SecurityProtocol = 'Tls12'; irm https://raw.githubusercontent.com/airylp/keytutil/main/install.ps1 | iex
 ```
 
 Para compilarlo con lo último de `main`: `… | sh -s -- compilar`.
