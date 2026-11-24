@@ -31,11 +31,13 @@ struct Doc {
     rev: u64,
     /// Texto de búsqueda de cada entrada (en minúsculas), por índice.
     hay: Vec<String>,
+    /// Alias (en minúsculas) agregados desde que se abrió: se pintan de otro color.
+    added: BTreeSet<String>,
 }
 
 impl Doc {
     fn new(path: Option<PathBuf>, ks: Keystore, password: String, original: Option<Vec<u8>>) -> Doc {
-        let mut d = Doc { path, ks, password, original, dirty: false, rev: 0, hay: vec![] };
+        let mut d = Doc { path, ks, password, original, dirty: false, rev: 0, hay: vec![], added: BTreeSet::new() };
         d.changed(false);
         d
     }
@@ -532,6 +534,7 @@ impl App {
         let Some(doc) = &mut self.doc else { return };
         let mut n = 0;
         for a in aliases {
+            doc.added.remove(&a.to_lowercase());
             if doc.ks.remove(a).is_some() {
                 n += 1;
             }
@@ -728,10 +731,17 @@ impl App {
                 let focused = self.focus.as_deref() == Some(e.alias.as_str());
                 let checked = self.checked.contains(&e.alias);
                 let v = ui.visuals();
+                // Agregados en esta sesión: fondo verde y una barra a la izquierda.
+                let new = doc.added.contains(&e.alias.to_lowercase());
+                if new {
+                    let g = colors(ui).2;
+                    ui.painter().rect_filled(rect, 4.0, g.gamma_multiply(if v.dark_mode { 0.22 } else { 0.16 }));
+                    ui.painter().rect_filled(Rect::from_min_size(rect.min, vec2(3.0, rect.height())), 1.5, g);
+                }
                 if focused {
-                    ui.painter().rect_filled(rect, 4.0, v.selection.bg_fill.gamma_multiply(0.55));
+                    ui.painter().rect_filled(rect, 4.0, v.selection.bg_fill.gamma_multiply(if new { 0.35 } else { 0.55 }));
                 } else if resp.hovered() {
-                    ui.painter().rect_filled(rect, 4.0, v.widgets.hovered.weak_bg_fill);
+                    ui.painter().rect_filled(rect, 4.0, v.widgets.hovered.weak_bg_fill.gamma_multiply(if new { 0.5 } else { 1.0 }));
                 }
                 // Casilla.
                 let cb = Rect::from_center_size(pos2(rect.left() + 12.0, rect.center().y), vec2(16.0, 16.0));
@@ -775,7 +785,11 @@ impl App {
                     }
                     None => cell(c[1], c[2], if e.kind == Kind::Secret { t!("(clave secreta)") } else { t!("(certificado ilegible)") }, &small, weak, None),
                 }
-                let resp = resp.on_hover_text_at_pointer(e.info.as_ref().map(|i| format!("{}\n{}", i.subject, expiry_text(i, now))).unwrap_or_default());
+                let mut tip = e.info.as_ref().map(|i| format!("{}\n{}", i.subject, expiry_text(i, now))).unwrap_or_default();
+                if new {
+                    tip.push_str(&format!("\n{}", t!("Agregado en esta sesión")));
+                }
+                let resp = resp.on_hover_text_at_pointer(tip);
                 if resp.clicked() {
                     clicked = Some(e.alias.clone());
                 }
@@ -1015,6 +1029,9 @@ impl App {
                 match doc.ks.rename(&old, &new) {
                     Ok(()) => {
                         let a = doc.ks.entries[doc.ks.find(&new).unwrap()].alias.clone();
+                        if doc.added.remove(&old.to_lowercase()) {
+                            doc.added.insert(a.to_lowercase());
+                        }
                         doc.changed(true);
                         if self.checked.remove(&old) {
                             self.checked.insert(a.clone());
@@ -1536,6 +1553,7 @@ impl App {
                 match doc.ks.add(&c.alias, c.der.clone()) {
                     Ok(()) => {
                         n += 1;
+                        doc.added.insert(c.alias.trim().to_lowercase());
                         last = Some(c.alias.to_lowercase());
                         c.checked = false;
                     }
@@ -1683,12 +1701,15 @@ impl App {
         // KEYTUTIL_AGREGAR=1: pulsa «Agregar» en cuanto llega la cadena del servidor.
         if std::env::var_os("KEYTUTIL_AGREGAR").is_some() {
             if let (Some(Dialog::Add(a)), Some(doc)) = (&mut self.dialog, &mut self.doc) {
-                if a.fetched.is_some() && a.candidates.iter().any(|c| c.checked) {
+                if a.pending.is_none() && a.candidates.iter().any(|c| c.checked) {
                     for c in a.candidates.iter_mut().filter(|c| c.checked) {
-                        let _ = doc.ks.add(&c.alias, c.der.clone());
+                        if doc.ks.add(&c.alias, c.der.clone()).is_ok() {
+                            doc.added.insert(c.alias.trim().to_lowercase());
+                        }
                         c.checked = false;
                     }
                     doc.changed(true);
+                    self.dialog = None;
                 }
             }
         }
