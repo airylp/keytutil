@@ -7,6 +7,7 @@ use crate::diag::{self, Chain, Origin};
 use crate::fetch::{self, Protocol};
 use crate::icons::{Icon, IconButton, Tone};
 use crate::keystore::{Format, Keystore, Kind, OpenError};
+use crate::estilo::Paleta;
 use crate::store::{self, Session};
 use eframe::egui::*;
 use std::collections::BTreeSet;
@@ -221,65 +222,6 @@ pub struct App {
     avisos: crate::estilo::Avisos,
 }
 
-/// Paleta de las tarjetas del detalle (al estilo de Tailwind: gray-50/200/500…).
-struct Tw {
-    card: Color32,
-    border: Color32,
-    muted: Color32,
-    text: Color32,
-    code: Color32,
-}
-
-impl Tw {
-    fn of(ui: &Ui) -> Tw {
-        if ui.visuals().dark_mode {
-            Tw { card: Color32::from_gray(34), border: Color32::from_gray(52), muted: Color32::from_gray(150), text: Color32::from_gray(232), code: Color32::from_gray(24) }
-        } else {
-            Tw { card: Color32::WHITE, border: rgb([0xe5, 0xe7, 0xeb]), muted: rgb([0x6b, 0x72, 0x80]), text: rgb([0x11, 0x18, 0x27]), code: rgb([0xf3, 0xf4, 0xf6]) }
-        }
-    }
-}
-
-/// Tarjeta con título en versalitas pequeñas.
-fn card(ui: &mut Ui, tw: &Tw, title: &str, add: impl FnOnce(&mut Ui)) {
-    Frame::new().fill(tw.card).stroke(Stroke::new(1.0, tw.border)).corner_radius(10.0).inner_margin(Margin::same(12)).show(ui, |ui| {
-        ui.set_width(ui.available_width());
-        ui.label(RichText::new(title.to_uppercase()).size(10.5).strong().color(tw.muted).extra_letter_spacing(0.8));
-        ui.add_space(8.0);
-        add(ui);
-    });
-    ui.add_space(10.0);
-}
-
-/// Campo: etiqueta pequeña y apagada encima del valor.
-fn field(ui: &mut Ui, tw: &Tw, label: &str, value: &str) {
-    ui.label(RichText::new(label).small().color(tw.muted));
-    ui.add(Label::new(RichText::new(value).color(tw.text)).wrap().selectable(true));
-    ui.add_space(6.0);
-}
-
-/// Texto en monoespaciada sobre un fondo gris (como un `<code>`).
-fn code(ui: &mut Ui, tw: &Tw, text: &str) {
-    Frame::new().fill(tw.code).corner_radius(6.0).inner_margin(Margin::symmetric(8, 6)).show(ui, |ui| {
-        ui.set_width(ui.available_width());
-        ui.add(Label::new(RichText::new(text).monospace().size(11.5).color(tw.text)).wrap().selectable(true));
-    });
-}
-
-/// Insignia redondeada con el color de fondo muy suave.
-fn pill(ui: &mut Ui, text: &str, color: Color32) {
-    Frame::new().fill(color.gamma_multiply(0.16)).corner_radius(9.0).inner_margin(Margin::symmetric(8, 2)).show(ui, |ui| {
-        ui.label(RichText::new(text).small().strong().color(color));
-    });
-}
-
-/// Etiqueta con borde (nombres alternativos).
-fn chip(ui: &mut Ui, tw: &Tw, text: &str) {
-    Frame::new().fill(tw.code).stroke(Stroke::new(1.0, tw.border)).corner_radius(6.0).inner_margin(Margin::symmetric(6, 2)).show(ui, |ui| {
-        ui.add(Label::new(RichText::new(text).monospace().size(11.5).color(tw.text)).selectable(true));
-    });
-}
-
 /// «C=US, O=Org, CN=Nombre» → pares (atributo, valor), sin el CN (ya se muestra aparte).
 fn split_dn(dn: &str) -> Vec<(String, String)> {
     let mut out: Vec<(String, String)> = Vec::new();
@@ -313,7 +255,7 @@ fn dn_label(k: &str) -> String {
     }
 }
 
-fn dn_grid(ui: &mut Ui, tw: &Tw, id: &str, dn: &str) {
+fn dn_grid(ui: &mut Ui, tw: &Paleta, id: &str, dn: &str) {
     let parts = split_dn(dn);
     if parts.is_empty() {
         return;
@@ -321,8 +263,8 @@ fn dn_grid(ui: &mut Ui, tw: &Tw, id: &str, dn: &str) {
     ui.add_space(6.0);
     Grid::new(id).num_columns(2).spacing([14.0, 5.0]).show(ui, |ui| {
         for (k, v) in parts {
-            ui.label(RichText::new(dn_label(&k)).small().color(tw.muted));
-            ui.add(Label::new(RichText::new(v).color(tw.text)).wrap().selectable(true));
+            ui.label(RichText::new(dn_label(&k)).small().color(tw.apagado));
+            ui.add(Label::new(RichText::new(v).color(tw.texto)).wrap().selectable(true));
             ui.end_row();
         }
     });
@@ -1153,7 +1095,7 @@ impl App {
         let mut act = None;
         let mut rename_ok = None;
         ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
-            let tw = Tw::of(ui);
+            let tw = Paleta::de(ui);
             ui.add_space(6.0);
             // Alias (renombrable).
             match &mut self.rename {
@@ -1168,7 +1110,7 @@ impl App {
                 }
                 _ => {
                     ui.horizontal_top(|ui| {
-                        ui.add(Label::new(RichText::new(&e.alias).size(19.0).strong().color(tw.text)).wrap_mode(TextWrapMode::Wrap).selectable(true));
+                        ui.add(Label::new(RichText::new(&e.alias).size(19.0).strong().color(tw.texto)).wrap_mode(TextWrapMode::Wrap).selectable(true));
                     });
                 }
             }
@@ -1177,21 +1119,21 @@ impl App {
             ui.horizontal_wrapped(|ui| {
                 ui.spacing_mut().item_spacing.x = 6.0;
                 let accent = crate::estilo::acento();
-                pill(ui, match e.kind {
+                crate::estilo::insignia(ui, match e.kind {
                     Kind::Trusted => t!("De confianza"),
                     Kind::KeyPair => t!("Clave privada"),
                     Kind::Secret => t!("Clave secreta"),
                 }, accent);
                 if let Some(info) = &e.info {
                     if info.is_ca {
-                        pill(ui, t!("Autoridad (CA)"), tw.muted);
+                        crate::estilo::insignia(ui, t!("Autoridad (CA)"), tw.apagado);
                     }
                     if info.self_signed {
-                        pill(ui, t!("Raíz"), tw.muted);
+                        crate::estilo::insignia(ui, t!("Raíz"), tw.apagado);
                     }
                 }
                 if doc.added.contains(&e.alias.to_lowercase()) {
-                    pill(ui, t!("Agregado en esta sesión"), green);
+                    crate::estilo::insignia(ui, t!("Agregado en esta sesión"), green);
                 }
                 if ui.add(IconButton::new(Icon::Edit, Tone::Edit).small()).on_hover_text(t!("Cambiar el alias")).clicked() {
                     act = Some(9);
@@ -1199,67 +1141,67 @@ impl App {
             });
             if e.kind != Kind::Trusted {
                 ui.add_space(2.0);
-                ui.label(RichText::new(t!("Se conserva tal cual al guardar.")).small().color(tw.muted));
+                ui.label(RichText::new(t!("Se conserva tal cual al guardar.")).small().color(tw.apagado));
             }
             ui.add_space(10.0);
             if let Some(info) = &e.info {
                 let d = info.days_left(now);
                 let (col, ic, txt) = if d < 0 { (red, Icon::Error, tf!("Vencido: {t}", t = expiry_text(info, now))) } else if d < SOON_DAYS { (orange, Icon::Warning, tf!("Vigente, {t}", t = expiry_text(info, now))) } else { (green, Icon::Check, tf!("Vigente · {t}", t = expiry_text(info, now))) };
                 // Vigencia: estado, fechas y barra del tiempo transcurrido.
-                card(ui, &tw, t!("Vigencia"), |ui| {
+                crate::estilo::tarjeta(ui, t!("Vigencia"), |ui| {
                     crate::estilo::etiqueta(ui, ic, RichText::new(txt).color(col).strong());
                     ui.add_space(8.0);
                     let total = (info.not_after - info.not_before).max(1) as f32;
                     let frac = ((now - info.not_before) as f32 / total).clamp(0.0, 1.0);
                     let (rect, _) = ui.allocate_exact_size(vec2(ui.available_width(), 6.0), Sense::hover());
-                    ui.painter().rect_filled(rect, 3.0, tw.border);
+                    ui.painter().rect_filled(rect, 3.0, tw.borde);
                     ui.painter().rect_filled(Rect::from_min_size(rect.min, vec2(rect.width() * frac, rect.height())), 3.0, col);
                     ui.add_space(8.0);
                     ui.columns(2, |c| {
-                        field(&mut c[0], &tw, t!("Desde"), &cert::date_time(info.not_before));
-                        field(&mut c[1], &tw, t!("Hasta"), &cert::date_time(info.not_after));
+                        crate::estilo::campo(&mut c[0], t!("Desde"), &cert::date_time(info.not_before));
+                        crate::estilo::campo(&mut c[1], t!("Hasta"), &cert::date_time(info.not_after));
                     });
                     if let Some(ms) = e.added_ms {
-                        field(ui, &tw, t!("Agregado al almacén"), &cert::date_time(ms / 1000));
+                        crate::estilo::campo(ui, t!("Agregado al almacén"), &cert::date_time(ms / 1000));
                     }
                 });
-                card(ui, &tw, t!("Emitido para"), |ui| {
-                    ui.add(Label::new(RichText::new(&info.cn).strong().size(15.0).color(tw.text)).wrap().selectable(true));
+                crate::estilo::tarjeta(ui, t!("Emitido para"), |ui| {
+                    ui.add(Label::new(RichText::new(&info.cn).strong().size(15.0).color(tw.texto)).wrap().selectable(true));
                     dn_grid(ui, &tw, "dn_titular", &info.subject);
                 });
-                card(ui, &tw, t!("Emitido por"), |ui| {
+                crate::estilo::tarjeta(ui, t!("Emitido por"), |ui| {
                     if info.self_signed {
-                        ui.label(RichText::new(t!("Por sí mismo (autofirmado)")).color(tw.text));
+                        ui.label(RichText::new(t!("Por sí mismo (autofirmado)")).color(tw.texto));
                     } else {
-                        ui.add(Label::new(RichText::new(&info.issuer_cn).strong().size(15.0).color(tw.text)).wrap().selectable(true));
+                        ui.add(Label::new(RichText::new(&info.issuer_cn).strong().size(15.0).color(tw.texto)).wrap().selectable(true));
                         dn_grid(ui, &tw, "dn_emisor", &info.issuer);
                     }
                 });
                 if !info.sans.is_empty() {
-                    card(ui, &tw, &tf!("Nombres alternativos ({n})", n = info.sans.len()), |ui| {
+                    crate::estilo::tarjeta(ui, &tf!("Nombres alternativos ({n})", n = info.sans.len()), |ui| {
                         ui.horizontal_wrapped(|ui| {
                             ui.spacing_mut().item_spacing = vec2(6.0, 6.0);
                             for n in info.sans.iter().take(60) {
-                                chip(ui, &tw, n);
+                                crate::estilo::chip(ui, n);
                             }
                             if info.sans.len() > 60 {
-                                ui.label(RichText::new(tf!("… y {n} más", n = info.sans.len() - 60)).small().color(tw.muted));
+                                ui.label(RichText::new(tf!("… y {n} más", n = info.sans.len() - 60)).small().color(tw.apagado));
                             }
                         });
                     });
                 }
-                card(ui, &tw, t!("Clave y firma"), |ui| {
+                crate::estilo::tarjeta(ui, t!("Clave y firma"), |ui| {
                     ui.columns(2, |c| {
-                        field(&mut c[0], &tw, t!("Clave"), &info.key);
-                        field(&mut c[1], &tw, t!("Firma"), &info.signature);
+                        crate::estilo::campo(&mut c[0], t!("Clave"), &info.key);
+                        crate::estilo::campo(&mut c[1], t!("Firma"), &info.signature);
                     });
-                    ui.label(RichText::new(t!("N.º de serie")).small().color(tw.muted));
-                    code(ui, &tw, &info.serial);
+                    ui.label(RichText::new(t!("N.º de serie")).small().color(tw.apagado));
+                    crate::estilo::codigo(ui, &info.serial);
                 });
-                card(ui, &tw, t!("Huellas"), |ui| {
+                crate::estilo::tarjeta(ui, t!("Huellas"), |ui| {
                     for (k, v) in [("SHA-256", &info.sha256), ("SHA-1", &info.sha1)] {
                         ui.horizontal(|ui| {
-                            ui.label(RichText::new(k).small().strong().color(tw.muted));
+                            ui.label(RichText::new(k).small().strong().color(tw.apagado));
                             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                                 if ui.add(IconButton::new(Icon::Copy, Tone::Neutral).small()).on_hover_text(t!("Copiar")).clicked() {
                                     ui.ctx().copy_text(v.clone());
@@ -1270,19 +1212,19 @@ impl App {
                         // En dos líneas (sin espacios no se partiría y ensancharía el panel).
                         let mid = v.len() / 2;
                         let cut = v[mid..].find(':').map(|i| mid + i + 1).unwrap_or(v.len());
-                        code(ui, &tw, &format!("{}\n{}", &v[..cut], &v[cut..]));
+                        crate::estilo::codigo(ui, &format!("{}\n{}", &v[..cut], &v[cut..]));
                         ui.add_space(4.0);
                     }
                 });
                 if e.certs.len() > 1 {
-                    card(ui, &tw, &tf!("Cadena ({n} certificados)", n = e.certs.len()), |ui| {
+                    crate::estilo::tarjeta(ui, &tf!("Cadena ({n} certificados)", n = e.certs.len()), |ui| {
                         for (k, der) in e.certs.iter().enumerate() {
                             if let Ok(ci) = CertInfo::parse(der) {
                                 ui.horizontal(|ui| {
                                     ui.label(RichText::new(format!("{}", k + 1)).small().strong().color(crate::estilo::acento()));
                                     ui.vertical(|ui| {
-                                        ui.add(Label::new(RichText::new(&ci.cn).color(tw.text)).wrap());
-                                        ui.label(RichText::new(tf!("vence {f}", f = cert::date(ci.not_after))).small().color(tw.muted));
+                                        ui.add(Label::new(RichText::new(&ci.cn).color(tw.texto)).wrap());
+                                        ui.label(RichText::new(tf!("vence {f}", f = cert::date(ci.not_after))).small().color(tw.apagado));
                                     });
                                 });
                                 ui.add_space(2.0);
