@@ -364,14 +364,10 @@ impl App {
         if let Some(l) = session.lang.as_deref().and_then(crate::i18n::Lang::from_code).or_else(crate::i18n::system) {
             crate::i18n::set(l);
         }
-        cc.egui_ctx.set_theme(match session.theme.as_deref() {
-            Some("claro") => ThemePreference::Light,
-            Some("oscuro") => ThemePreference::Dark,
-            _ => ThemePreference::System,
-        });
+        crate::estilo::aplicar_tema(&cc.egui_ctx, crate::estilo::Tema::de_clave(session.theme.as_deref().unwrap_or("")));
         crate::estilo::aplicar(&cc.egui_ctx);
         if let Ok(t) = std::env::var("KEYUTIL_TEMA") {
-            cc.egui_ctx.set_theme(if t == "oscuro" { ThemePreference::Dark } else { ThemePreference::Light });
+            crate::estilo::aplicar_tema(&cc.egui_ctx, crate::estilo::Tema::de_clave(&t));
         }
         let mut app = App {
             session,
@@ -1318,11 +1314,7 @@ impl App {
                 let mut open = true;
                 let label = crate::update::version_label();
                 let version = crate::estilo::Version { etiqueta: &label, actualizable: crate::update::SUPPORTED };
-                let mut theme = match self.session.theme.as_deref() {
-                    Some("claro") => ThemePreference::Light,
-                    Some("oscuro") => ThemePreference::Dark,
-                    _ => ThemePreference::System,
-                };
+                let mut theme = crate::estilo::Tema::de_clave(self.session.theme.as_deref().unwrap_or(""));
                 let accion = crate::estilo::ventana_ajustes(ctx, &mut open, &version, |ui| {
                     use crate::estilo::{fila, rejilla, seccion};
                     seccion(ui, t!("General"));
@@ -1333,11 +1325,7 @@ impl App {
                             self.session_dirty = true;
                         }
                         if crate::estilo::fila_tema(ui, &mut theme) {
-                            self.session.theme = match theme {
-                                ThemePreference::Light => Some("claro".into()),
-                                ThemePreference::Dark => Some("oscuro".into()),
-                                ThemePreference::System => None,
-                            };
+                            self.session.theme = theme.clave().map(Into::into);
                             self.session_dirty = true;
                         }
                         if crate::update::SUPPORTED {
@@ -1379,7 +1367,7 @@ impl App {
                     self.session.backup = None;
                     self.session.list_bg = None;
                     self.session.list_fg = None;
-                    ctx.set_theme(ThemePreference::System);
+                    crate::estilo::aplicar_tema(ctx, crate::estilo::Tema::Sistema);
                     crate::i18n::set(crate::i18n::system().unwrap_or(crate::i18n::Lang::Es));
                     self.session_dirty = true;
                 }
@@ -2249,6 +2237,11 @@ impl eframe::App for App {
         false
     }
 
+    /// En macOS, Ctrl hace de Cmd (atajos y copiar/cortar/pegar).
+    fn raw_input_hook(&mut self, ctx: &Context, raw: &mut RawInput) {
+        crate::estilo::ctrl_mac(ctx, raw);
+    }
+
     fn ui(&mut self, ui: &mut Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
         self.poll(&ctx);
@@ -2269,9 +2262,9 @@ impl eframe::App for App {
         self.status_bar(ui);
         if self.doc.is_some() {
             Panel::right("detalle").resizable(true).default_size(340.0).min_size(260.0).show(ui, |ui| self.detail(ui));
-            CentralPanel::default().show(ui, |ui| self.list(ui));
+            CentralPanel::default().frame(crate::estilo::marco_central(ui.style())).show(ui, |ui| self.list(ui));
         } else {
-            CentralPanel::default().show(ui, |ui| self.welcome(ui));
+            CentralPanel::default().frame(crate::estilo::marco_central(ui.style())).show(ui, |ui| self.welcome(ui));
         }
         self.dialogs(&ctx);
         self.about_window(&ctx);
