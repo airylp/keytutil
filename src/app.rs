@@ -210,7 +210,7 @@ fn expiry_text(info: &CertInfo, now: i64) -> String {
 
 impl App {
     pub fn new(cc: &eframe::CreationContext, open: Option<PathBuf>) -> App {
-        let screenshot = std::env::var("KEYTUTIL_SCREENSHOT").ok();
+        let screenshot = std::env::var("KEYUTIL_SCREENSHOT").ok();
         let session = store::load_session();
         if let Some(l) = session.lang.as_deref().and_then(crate::i18n::Lang::from_code).or_else(crate::i18n::system) {
             crate::i18n::set(l);
@@ -221,7 +221,7 @@ impl App {
             _ => ThemePreference::System,
         });
         crate::estilo::aplicar(&cc.egui_ctx);
-        if let Ok(t) = std::env::var("KEYTUTIL_TEMA") {
+        if let Ok(t) = std::env::var("KEYUTIL_TEMA") {
             cc.egui_ctx.set_theme(if t == "oscuro" { ThemePreference::Dark } else { ThemePreference::Light });
         }
         let mut app = App {
@@ -485,7 +485,7 @@ impl App {
         }
         let last = self.session.last_server.clone().unwrap_or_default();
         let mut d = AddDialog::new(AddMode::Server, last);
-        if let Ok(h) = std::env::var("KEYTUTIL_SERVIDOR") {
+        if let Ok(h) = std::env::var("KEYUTIL_SERVIDOR") {
             if self.screenshot.is_some() {
                 d.input = h;
                 Self::start_fetch(&mut d, ctx);
@@ -1685,42 +1685,42 @@ impl App {
         let Some(path) = self.screenshot.clone() else { return };
         self.frames += 1;
         if self.frames == 3 {
-            self.show_about = std::env::var_os("KEYTUTIL_ACERCA").is_some();
-            self.show_keys = std::env::var_os("KEYTUTIL_ATAJOS").is_some();
-            if let Ok(m) = std::env::var("KEYTUTIL_AVISO") {
+            self.show_about = std::env::var_os("KEYUTIL_ACERCA").is_some();
+            self.show_keys = std::env::var_os("KEYUTIL_ATAJOS").is_some();
+            if let Ok(m) = std::env::var("KEYUTIL_AVISO") {
                 self.avisos.auto(m);
             }
-            if std::env::var_os("KEYTUTIL_AJUSTES").is_some() {
+            if std::env::var_os("KEYUTIL_AJUSTES").is_some() {
                 self.dialog = Some(Dialog::Settings);
             }
-            if std::env::var_os("KEYTUTIL_GUARDAR_COMO").is_some() {
+            if std::env::var_os("KEYUTIL_GUARDAR_COMO").is_some() {
                 if let Some(d) = &self.doc {
                     self.dialog = Some(Dialog::SaveAs { format: d.ks.format, password: d.password.clone() });
                 }
             }
-            if let Ok(f) = std::env::var("KEYTUTIL_BUSCAR") {
+            if let Ok(f) = std::env::var("KEYUTIL_BUSCAR") {
                 self.filter = f;
             }
-            if let Ok(a) = std::env::var("KEYTUTIL_FOCO") {
+            if let Ok(a) = std::env::var("KEYUTIL_FOCO") {
                 self.focus = self.doc.as_ref().and_then(|d| d.ks.find(&a)).map(|i| self.doc.as_ref().unwrap().ks.entries[i].alias.clone());
             }
-            if std::env::var_os("KEYTUTIL_MARCAR_VENCIDOS").is_some() {
+            if std::env::var_os("KEYUTIL_MARCAR_VENCIDOS").is_some() {
                 let now = cert::now();
                 if let Some(d) = &self.doc {
                     self.checked = d.ks.entries.iter().filter(|e| e.info.as_ref().is_some_and(|i| i.expired(now))).map(|e| e.alias.clone()).collect();
                 }
             }
-            if std::env::var_os("KEYTUTIL_SERVIDOR").is_some() {
+            if std::env::var_os("KEYUTIL_SERVIDOR").is_some() {
                 self.open_add_server(ctx);
             }
-            if let Ok(f) = std::env::var("KEYTUTIL_PEGAR") {
+            if let Ok(f) = std::env::var("KEYUTIL_PEGAR") {
                 if let Ok(ders) = std::fs::read(&f).map_err(|e| e.to_string()).and_then(|b| cert::parse_many(&b)) {
                     self.offer_certs(ders, f);
                 }
             }
         }
-        // KEYTUTIL_AGREGAR=1: pulsa «Agregar» en cuanto llega la cadena del servidor.
-        if std::env::var_os("KEYTUTIL_AGREGAR").is_some() {
+        // KEYUTIL_AGREGAR=1: pulsa «Agregar» en cuanto llega la cadena del servidor.
+        if std::env::var_os("KEYUTIL_AGREGAR").is_some() {
             if let (Some(Dialog::Add(a)), Some(doc)) = (&mut self.dialog, &mut self.doc) {
                 if a.pending.is_none() && a.candidates.iter().any(|c| c.checked) {
                     for c in a.candidates.iter_mut().filter(|c| c.checked) {

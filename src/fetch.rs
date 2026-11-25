@@ -237,7 +237,7 @@ fn starttls(tcp: &mut TcpStream, protocol: Protocol) -> Result<(), String> {
     match protocol {
         Protocol::Smtp => {
             smtp(&mut line, "220", t!("saludo"))?;
-            send("EHLO keytutil\r\n")?;
+            send("EHLO keyutil\r\n")?;
             smtp(&mut line, "250", "EHLO")?;
             send("STARTTLS\r\n")?;
             smtp(&mut line, "220", "STARTTLS")?;
@@ -368,7 +368,7 @@ mod tests {
         assert!(trusted(&f.chain[..1], std::iter::empty(), "127.0.0.1").is_err());
     }
 
-    /// Servidores reales (red): KEYTUTIL_RED=1 cargo test -- --ignored red
+    /// Servidores reales (red): KEYUTIL_RED=1 cargo test -- --ignored red
     #[test]
     #[ignore]
     fn red_servidores_reales() {

@@ -1,5 +1,5 @@
 # Versiones: al subir un tag «v*» (p. ej. `git tag v0.1.0 && git push origin v0.1.0`)
-# compila keytutil en Linux, macOS (universal: Apple Silicon + Intel) y Windows y
+# compila keyutil en Linux, macOS (universal: Apple Silicon + Intel) y Windows y
 # publica los archivos en GitHub Releases. «Run workflow» (a mano) solo compila y
 # deja los archivos como artefactos, sin publicar nada.
 name: Versiones
@@ -46,8 +46,8 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then V="${GITHUB_REF_NAME#v}"; else V="$(grep -m1 '^version' Cargo.toml | cut -d'"' -f2)-prueba"; fi
           echo "VERSION=$V" >> "$GITHUB_ENV"
           # Los lee la app al compilar (update.rs): versión y commit publicados.
-          echo "KEYTUTIL_VERSION=v$V" >> "$GITHUB_ENV"
-          echo "KEYTUTIL_COMMIT=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+          echo "KEYUTIL_VERSION=v$V" >> "$GITHUB_ENV"
+          echo "KEYUTIL_COMMIT=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
 
       - name: Tests
         if: runner.os == 'Linux'
@@ -57,32 +57,32 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           cargo build --release --locked
-          mkdir -p dist/keytutil-$VERSION-linux-x86_64
-          cp target/release/keytutil README.md LICENSE dist/keytutil-$VERSION-linux-x86_64/
-          tar -C dist -czf dist/keytutil-$VERSION-linux-x86_64.tar.gz keytutil-$VERSION-linux-x86_64
+          mkdir -p dist/keyutil-$VERSION-linux-x86_64
+          cp target/release/keyutil README.md LICENSE dist/keyutil-$VERSION-linux-x86_64/
+          tar -C dist -czf dist/keyutil-$VERSION-linux-x86_64.tar.gz keyutil-$VERSION-linux-x86_64
 
       - name: Compilar y empaquetar (macOS)
         if: runner.os == 'macOS'
         run: |
           cargo build --release --locked --target aarch64-apple-darwin
           cargo build --release --locked --target x86_64-apple-darwin
-          APP=dist/Keytutil.app
+          APP=dist/Keyutil.app
           mkdir -p "$APP/Contents/MacOS"
-          lipo -create -output "$APP/Contents/MacOS/keytutil" target/aarch64-apple-darwin/release/keytutil target/x86_64-apple-darwin/release/keytutil
+          lipo -create -output "$APP/Contents/MacOS/keyutil" target/aarch64-apple-darwin/release/keyutil target/x86_64-apple-darwin/release/keyutil
           # Ícono (la «P» de cubos): PNG generados por la propia app → .icns.
           mkdir -p "$APP/Contents/Resources"
-          "$APP/Contents/MacOS/keytutil" --iconset dist/keytutil.iconset
-          iconutil -c icns dist/keytutil.iconset -o "$APP/Contents/Resources/keytutil.icns"
-          rm -rf dist/keytutil.iconset
+          "$APP/Contents/MacOS/keyutil" --iconset dist/keyutil.iconset
+          iconutil -c icns dist/keyutil.iconset -o "$APP/Contents/Resources/keyutil.icns"
+          rm -rf dist/keyutil.iconset
           cat > "$APP/Contents/Info.plist" <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0"><dict>
-            <key>CFBundleName</key><string>Keytutil</string>
-            <key>CFBundleDisplayName</key><string>Keytutil</string>
-            <key>CFBundleIdentifier</key><string>io.github.airylp.keytutil</string>
-            <key>CFBundleExecutable</key><string>keytutil</string>
-            <key>CFBundleIconFile</key><string>keytutil</string>
+            <key>CFBundleName</key><string>Keyutil</string>
+            <key>CFBundleDisplayName</key><string>Keyutil</string>
+            <key>CFBundleIdentifier</key><string>io.github.airylp.keyutil</string>
+            <key>CFBundleExecutable</key><string>keyutil</string>
+            <key>CFBundleIconFile</key><string>keyutil</string>
             <key>CFBundlePackageType</key><string>APPL</string>
             <key>CFBundleShortVersionString</key><string>$VERSION</string>
             <key>CFBundleVersion</key><string>$VERSION</string>
@@ -91,7 +91,7 @@ jobs:
           </dict></plist>
           EOF
           codesign --force --deep -s - "$APP"
-          ditto -c -k --keepParent "$APP" dist/keytutil-$VERSION-macos-universal.zip
+          ditto -c -k --keepParent "$APP" dist/keyutil-$VERSION-macos-universal.zip
 
       - name: Compilar y empaquetar (Windows)
         if: runner.os == 'Windows'
@@ -107,17 +107,17 @@ jobs:
           7z e mesa.7z -otarget\release -y x64\opengl32.dll x64\libgallium_wgl.dll
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           New-Item -ItemType Directory -Force dist | Out-Null
-          Compress-Archive -Path target\release\keytutil.exe, target\release\opengl32.dll, target\release\libgallium_wgl.dll, windows\MESA.txt, README.md, LICENSE -DestinationPath "dist\keytutil-$env:VERSION-windows-x86_64.zip"
-          # Instalador (Inno Setup, windows/keytutil.iss): lo usan install.ps1 y el actualizador.
+          Compress-Archive -Path target\release\keyutil.exe, target\release\opengl32.dll, target\release\libgallium_wgl.dll, windows\MESA.txt, README.md, LICENSE -DestinationPath "dist\keyutil-$env:VERSION-windows-x86_64.zip"
+          # Instalador (Inno Setup, windows/keyutil.iss): lo usan install.ps1 y el actualizador.
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
-          & $iscc "/DAppVersion=$env:VERSION" windows\keytutil.iss
+          & $iscc "/DAppVersion=$env:VERSION" windows\keyutil.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Copy-Item target\instalador\*.exe dist\
 
       - uses: actions/upload-artifact@v4
         with:
-          name: keytutil-${{ matrix.name }}
+          name: keyutil-${{ matrix.name }}
           path: |
             dist/*.tar.gz
             dist/*.zip
@@ -137,13 +137,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           ls -l dist
-          notes="Prototipo de keytutil: administra los certificados de confianza de Java (cacerts): agregar los de un servidor, quitar y exportar.
+          notes="Prototipo de keyutil: administra los certificados de confianza de Java (cacerts): agregar los de un servidor, quitar y exportar.
 
-          - **macOS** (Apple Silicon e Intel): descarga \`keytutil-*-macos-universal.zip\`, descomprímelo y mueve *Keytutil.app* a Aplicaciones. No está firmada: la primera vez usa clic derecho → Abrir, o \`xattr -dr com.apple.quarantine /Applications/Keytutil.app\`.
-          - **Windows** 10/11: abre \`keytutil-*-setup.exe\` (o, en PowerShell, \`irm https://raw.githubusercontent.com/airylp/keytutil/main/install.ps1 | iex\`). Versión portátil: \`keytutil-*-windows-x86_64.zip\`. SmartScreen: «Más información» → «Ejecutar de todas formas».
-          - **Linux** x86_64: \`tar xzf keytutil-*-linux-x86_64.tar.gz\` y ejecuta \`./keytutil\`."
+          - **macOS** (Apple Silicon e Intel): descarga \`keyutil-*-macos-universal.zip\`, descomprímelo y mueve *Keyutil.app* a Aplicaciones. No está firmada: la primera vez usa clic derecho → Abrir, o \`xattr -dr com.apple.quarantine /Applications/Keyutil.app\`.
+          - **Windows** 10/11: abre \`keyutil-*-setup.exe\` (o, en PowerShell, \`irm https://raw.githubusercontent.com/airylp/keyutil/main/install.ps1 | iex\`). Versión portátil: \`keyutil-*-windows-x86_64.zip\`. SmartScreen: «Más información» → «Ejecutar de todas formas».
+          - **Linux** x86_64: \`tar xzf keyutil-*-linux-x86_64.tar.gz\` y ejecuta \`./keyutil\`."
           if gh release view "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$GITHUB_REF_NAME" dist/* --clobber -R "$GITHUB_REPOSITORY"
           else
-            gh release create "$GITHUB_REF_NAME" dist/* --prerelease --title "keytutil $GITHUB_REF_NAME (prototipo)" --notes "$notes" -R "$GITHUB_REPOSITORY"
+            gh release create "$GITHUB_REF_NAME" dist/* --prerelease --title "keyutil $GITHUB_REF_NAME (prototipo)" --notes "$notes" -R "$GITHUB_REPOSITORY"
           fi

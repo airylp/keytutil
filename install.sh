@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
-# keytutil: instalar, actualizar o desinstalar con un solo comando.
+# keyutil: instalar, actualizar o desinstalar con un solo comando.
 #
-#     curl -fsSL https://raw.githubusercontent.com/airylp/keytutil/main/install.sh | sh
+#     curl -fsSL https://raw.githubusercontent.com/airylp/keyutil/main/install.sh | sh
 #
 #   Pregunta qué hacer: si ya está instalado ofrece actualizar o desinstalar; si
 #   no, instalarlo. También se puede indicar directamente (sin preguntas):
@@ -12,17 +12,17 @@
 #   Por defecto descarga la última versión publicada en GitHub Releases (segundos,
 #   sin Rust). Si no hay versión para este equipo (p. ej. Linux ARM) o se pide
 #   «compilar», descarga el código y lo compila (instala Rust con rustup si falta).
-#   macOS: Keytutil.app en /Applications (o ~/Applications sin permiso).
-#   Linux: ~/.local/bin/keytutil y entrada en el menú de aplicaciones.
+#   macOS: Keyutil.app en /Applications (o ~/Applications sin permiso).
+#   Linux: ~/.local/bin/keyutil y entrada en el menú de aplicaciones.
 #
-# Variables opcionales: KEYTUTIL_REPO (usuario/repo), KEYTUTIL_VERSION (tag,
-#   p. ej. v0.1.0; por defecto la más reciente), KEYTUTIL_REF (rama o tag a
-#   compilar; main), KEYTUTIL_DESTINO (carpeta de instalación, para pruebas),
-#   KEYTUTIL_IDIOMA (es|en|fr).
+# Variables opcionales: KEYUTIL_REPO (usuario/repo), KEYUTIL_VERSION (tag,
+#   p. ej. v0.1.0; por defecto la más reciente), KEYUTIL_REF (rama o tag a
+#   compilar; main), KEYUTIL_DESTINO (carpeta de instalación, para pruebas),
+#   KEYUTIL_IDIOMA (es|en|fr).
 set -eu
 
-REPO="${KEYTUTIL_REPO:-airylp/keytutil}"
-REF="${KEYTUTIL_REF:-main}"
+REPO="${KEYUTIL_REPO:-airylp/keyutil}"
+REF="${KEYUTIL_REF:-main}"
 ACCION="${1:-}"
 OS="$(uname)"
 
@@ -45,16 +45,16 @@ pregunta() {
 }
 
 if [ "$OS" = "Darwin" ]; then
-    APP_DIRS="${KEYTUTIL_DESTINO:-/Applications $HOME/Applications}"
-    CONFIG="$HOME/Library/Application Support/keytutil"
-    CACHE="$HOME/Library/Caches/keytutil-compilacion"
+    APP_DIRS="${KEYUTIL_DESTINO:-/Applications $HOME/Applications}"
+    CONFIG="$HOME/Library/Application Support/keyutil"
+    CACHE="$HOME/Library/Caches/keyutil-compilacion"
     PLATAFORMA="macos-universal"
     EXT="zip"
 elif [ "$OS" = "Linux" ]; then
-    BIN_DIR="${KEYTUTIL_DESTINO:-$HOME/.local/bin}"
+    BIN_DIR="${KEYUTIL_DESTINO:-$HOME/.local/bin}"
     DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
-    CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/keytutil"
-    CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/keytutil-compilacion"
+    CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/keyutil"
+    CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/keyutil-compilacion"
     # Solo se publica para x86_64; en otras arquitecturas se compila.
     case "$(uname -m)" in
         x86_64 | amd64) PLATAFORMA="linux-x86_64" ;;
@@ -62,17 +62,17 @@ elif [ "$OS" = "Linux" ]; then
     esac
     EXT="tar.gz"
 else
-    fail "$(m 'En Windows usa install.ps1 (PowerShell: irm https://raw.githubusercontent.com/airylp/keytutil/main/install.ps1 | iex) o el instalador de https://github.com/airylp/keytutil/releases' 'On Windows use install.ps1 (PowerShell: irm https://raw.githubusercontent.com/airylp/keytutil/main/install.ps1 | iex) or the installer from https://github.com/airylp/keytutil/releases' "Sous Windows, utilisez install.ps1 (PowerShell : irm https://raw.githubusercontent.com/airylp/keytutil/main/install.ps1 | iex) ou l'installateur de https://github.com/airylp/keytutil/releases")"
+    fail "$(m 'En Windows usa install.ps1 (PowerShell: irm https://raw.githubusercontent.com/airylp/keyutil/main/install.ps1 | iex) o el instalador de https://github.com/airylp/keyutil/releases' 'On Windows use install.ps1 (PowerShell: irm https://raw.githubusercontent.com/airylp/keyutil/main/install.ps1 | iex) or the installer from https://github.com/airylp/keyutil/releases' "Sous Windows, utilisez install.ps1 (PowerShell : irm https://raw.githubusercontent.com/airylp/keyutil/main/install.ps1 | iex) ou l'installateur de https://github.com/airylp/keyutil/releases")"
 fi
 MARCA="$CONFIG/version-instalada"
 # Tamaños del ícono en el tema hicolor (Linux).
 ICON_SIZES="16 32 64 128 256 512"
 
 # ------------------------------------------------------------ idioma
-# KEYTUTIL_IDIOMA, el guardado en la sesión de la app o, si hay terminal y no
+# KEYUTIL_IDIOMA, el guardado en la sesión de la app o, si hay terminal y no
 # se indicó acción, se pregunta (y se guarda para la app).
 SESION="$CONFIG/sesion.toml"
-IDIOMA="${KEYTUTIL_IDIOMA:-}"
+IDIOMA="${KEYUTIL_IDIOMA:-}"
 GUARDAR_IDIOMA="$IDIOMA"
 [ -n "$IDIOMA" ] || IDIOMA="$(sed -n 's/^idioma *= *"\(..\)".*/\1/p' "$SESION" 2>/dev/null | head -n 1)"
 if [ -z "$IDIOMA" ]; then
@@ -101,15 +101,15 @@ guardar_idioma() {
 # ------------------------------------------------------------ estado
 instalado() {
     if [ "$OS" = "Darwin" ]; then
-        for d in $APP_DIRS; do [ -d "$d/Keytutil.app" ] && { echo "$d/Keytutil.app"; return 0; }; done
+        for d in $APP_DIRS; do [ -d "$d/Keyutil.app" ] && { echo "$d/Keyutil.app"; return 0; }; done
         return 1
     fi
-    [ -x "$BIN_DIR/keytutil" ] && echo "$BIN_DIR/keytutil"
+    [ -x "$BIN_DIR/keyutil" ] && echo "$BIN_DIR/keyutil"
 }
 
 # Tag de la versión a instalar: la pedida o la más reciente (incluye prototipos).
 version_remota() {
-    if [ -n "${KEYTUTIL_VERSION:-}" ]; then echo "$KEYTUTIL_VERSION"; return; fi
+    if [ -n "${KEYUTIL_VERSION:-}" ]; then echo "$KEYUTIL_VERSION"; return; fi
     curl -fsSL "https://api.github.com/repos/$REPO/releases?per_page=1" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -n 1
 }
 
@@ -117,14 +117,14 @@ version_remota() {
 desinstalar() {
     ruta="$(instalado || true)"
     if [ -z "$ruta" ]; then
-        info "$(m 'keytutil no está instalado.' 'keytutil is not installed.' "keytutil n'est pas installé.")"
+        info "$(m 'keyutil no está instalado.' 'keyutil is not installed.' "keyutil n'est pas installé.")"
     else
         if [ "$OS" = "Darwin" ]; then
-            pkill -x keytutil 2>/dev/null || true
+            pkill -x keyutil 2>/dev/null || true
             rm -rf "$ruta"
         else
-            rm -f "$BIN_DIR/keytutil" "$DATA/applications/keytutil.desktop"
-            for t in $ICON_SIZES; do rm -f "$DATA/icons/hicolor/${t}x${t}/apps/keytutil.png"; done
+            rm -f "$BIN_DIR/keyutil" "$DATA/applications/keyutil.desktop"
+            for t in $ICON_SIZES; do rm -f "$DATA/icons/hicolor/${t}x${t}/apps/keyutil.png"; done
             command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$DATA/applications" 2>/dev/null || true
         fi
         rm -f "$MARCA"
@@ -139,7 +139,7 @@ desinstalar() {
 }
 
 # ------------------------------------------------------------ colocar
-# Pone la app en su sitio (macOS) a partir de una Keytutil.app ya armada.
+# Pone la app en su sitio (macOS) a partir de una Keyutil.app ya armada.
 colocar_app() {
     src="$1"
     destino=""
@@ -149,17 +149,18 @@ colocar_app() {
     done
     [ -n "$destino" ] || fail "$(m "No hay permiso para escribir en: $APP_DIRS" "No permission to write to: $APP_DIRS" "Pas de permission d'écriture dans : $APP_DIRS")"
     abierta=0
-    # KEYTUTIL_NO_CERRAR (lo pone el actualizador de la app): no se cierra la app
+    # KEYUTIL_NO_CERRAR (lo pone el actualizador de la app): no se cierra la app
     # abierta; la versión nueva se abre al pulsar «Reiniciar ahora».
-    if [ -z "${KEYTUTIL_NO_CERRAR:-}" ] && pgrep -x keytutil >/dev/null 2>&1; then
+    if [ -z "${KEYUTIL_NO_CERRAR:-}" ] && pgrep -x keyutil >/dev/null 2>&1; then
         abierta=1
-        osascript -e 'quit app "Keytutil"' >/dev/null 2>&1 || pkill -x keytutil || true
+        osascript -e 'quit app "Keyutil"' >/dev/null 2>&1 || pkill -x keyutil || true
         sleep 1
     fi
-    rm -rf "$destino/Keytutil.app"
-    mv "$src" "$destino/Keytutil.app"
-    /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$destino/Keytutil.app" 2>/dev/null || true
-    ruta="$destino/Keytutil.app"
+    rm -rf "$destino/Keyutil.app"
+    mv "$src" "$destino/Keyutil.app"
+    rm -rf "$destino/Keytutil.app"  # nombre anterior a la 0.1.4
+    /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "$destino/Keyutil.app" 2>/dev/null || true
+    ruta="$destino/Keyutil.app"
     if [ "$abierta" = 1 ]; then open "$ruta" || true; fi
 }
 
@@ -167,37 +168,40 @@ colocar_app() {
 colocar_bin() {
     mkdir -p "$BIN_DIR"
     # Copia + rename: funciona aunque la app esté abierta.
-    cp "$1" "$BIN_DIR/.keytutil.nuevo"
-    chmod +x "$BIN_DIR/.keytutil.nuevo"
-    mv "$BIN_DIR/.keytutil.nuevo" "$BIN_DIR/keytutil"
-    ruta="$BIN_DIR/keytutil"
-    if [ -z "${KEYTUTIL_DESTINO:-}" ]; then
+    cp "$1" "$BIN_DIR/.keyutil.nuevo"
+    chmod +x "$BIN_DIR/.keyutil.nuevo"
+    mv "$BIN_DIR/.keyutil.nuevo" "$BIN_DIR/keyutil"
+    # Hasta la 0.1.3 la app se llamaba «keytutil».
+    rm -f "$BIN_DIR/keytutil" "$DATA/applications/keytutil.desktop"
+    for t in $ICON_SIZES; do rm -f "$DATA/icons/hicolor/${t}x${t}/apps/keytutil.png"; done
+    ruta="$BIN_DIR/keyutil"
+    if [ -z "${KEYUTIL_DESTINO:-}" ]; then
         # Ícono (la «P» de cubos) generado por la propia app, escrito de forma atómica.
         ic="$(mktemp -d)"
         if "$ruta" --iconset "$ic" 2>/dev/null; then
             for t in $ICON_SIZES; do
                 case $t in 64) f=icon_32x32@2x.png ;; *) f="icon_${t}x${t}.png" ;; esac
                 d="$DATA/icons/hicolor/${t}x${t}/apps"
-                mkdir -p "$d" && cp "$ic/$f" "$d/.keytutil.png.nuevo" && mv -f "$d/.keytutil.png.nuevo" "$d/keytutil.png"
+                mkdir -p "$d" && cp "$ic/$f" "$d/.keyutil.png.nuevo" && mv -f "$d/.keyutil.png.nuevo" "$d/keyutil.png"
             done
             touch "$DATA/icons/hicolor" 2>/dev/null || true
         fi
         rm -rf "$ic"
         mkdir -p "$DATA/applications"
-        cat > "$DATA/applications/keytutil.desktop" <<DESKTOP
+        cat > "$DATA/applications/keyutil.desktop" <<DESKTOP
 [Desktop Entry]
 Type=Application
-Name=Keytutil
+Name=Keyutil
 Comment=$(m 'Certificados de confianza de Java (cacerts)' 'Java trusted certificates (cacerts)' 'Certificats de confiance Java (cacerts)')
 Exec=$ruta
-Icon=keytutil
+Icon=keyutil
 Terminal=false
 Categories=Development;Security;
-StartupWMClass=keytutil
+StartupWMClass=keyutil
 DESKTOP
         command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$DATA/applications" 2>/dev/null || true
     fi
-    case ":$PATH:" in *":$BIN_DIR:"*) ;; *) info "$(m "Añade $BIN_DIR a tu PATH para abrirlo con «keytutil»." "Add $BIN_DIR to your PATH to run it as “keytutil”." "Ajoutez $BIN_DIR à votre PATH pour le lancer avec «keytutil».")" ;; esac
+    case ":$PATH:" in *":$BIN_DIR:"*) ;; *) info "$(m "Añade $BIN_DIR a tu PATH para abrirlo con «keyutil»." "Add $BIN_DIR to your PATH to run it as “keyutil”." "Ajoutez $BIN_DIR à votre PATH pour le lancer avec «keyutil».")" ;; esac
 }
 
 terminar() { # terminar versión
@@ -226,7 +230,7 @@ instalar() {
         info "$(m "Ya tienes la versión más reciente ($tag)." "You already have the latest version ($tag)." "Vous avez déjà la dernière version ($tag).")"
         return 0
     fi
-    archivo="keytutil-${tag#v}-$PLATAFORMA.$EXT"
+    archivo="keyutil-${tag#v}-$PLATAFORMA.$EXT"
     url="https://github.com/$REPO/releases/download/$tag/$archivo"
     tmp="$(mktemp -d)"
     trap 'rm -rf "$tmp"' EXIT
@@ -237,13 +241,13 @@ instalar() {
     fi
     if [ "$OS" = "Darwin" ]; then
         ditto -x -k "$tmp/$archivo" "$tmp/x"
-        [ -d "$tmp/x/Keytutil.app" ] || fail "$(m 'El archivo descargado no contiene Keytutil.app' 'The download does not contain Keytutil.app' "Le téléchargement ne contient pas Keytutil.app")"
+        [ -d "$tmp/x/Keyutil.app" ] || fail "$(m 'El archivo descargado no contiene Keyutil.app' 'The download does not contain Keyutil.app' "Le téléchargement ne contient pas Keyutil.app")"
         # Sin firma de Apple: se quita la cuarentena para que abra sin avisos.
-        xattr -dr com.apple.quarantine "$tmp/x/Keytutil.app" 2>/dev/null || true
-        colocar_app "$tmp/x/Keytutil.app"
+        xattr -dr com.apple.quarantine "$tmp/x/Keyutil.app" 2>/dev/null || true
+        colocar_app "$tmp/x/Keyutil.app"
     else
         tar -xzf "$tmp/$archivo" -C "$tmp"
-        colocar_bin "$tmp/keytutil-${tag#v}-$PLATAFORMA/keytutil"
+        colocar_bin "$tmp/keyutil-${tag#v}-$PLATAFORMA/keyutil"
     fi
     terminar "$tag"
 }
@@ -282,24 +286,24 @@ compilar() {
     if [ -d "$CACHE" ] && [ "$(du -sk "$CACHE" | cut -f1)" -gt 3145728 ]; then
         rm -rf "$CACHE" && info "$(m 'Caché de compilación vaciada (pasaba de 3 GB)' 'Build cache emptied (it was over 3 GB)' 'Cache de compilation vidé (il dépassait 3 Go)')"
     fi
-    (cd "$src" && KEYTUTIL_COMMIT="$sha" CARGO_TARGET_DIR="$CACHE" cargo build --release --locked) || fail "$(m 'La compilación falló.' 'The build failed.' 'La compilation a échoué.')"
+    (cd "$src" && KEYUTIL_COMMIT="$sha" CARGO_TARGET_DIR="$CACHE" cargo build --release --locked) || fail "$(m 'La compilación falló.' 'The build failed.' 'La compilation a échoué.')"
     version="$(sed -n 's/^version *= *"\(.*\)"/\1/p' "$src/Cargo.toml" | head -n 1)"
     etiqueta="$REF${sha:+@$sha}"
     if [ "$OS" = "Darwin" ]; then
-        app="$tmp/Keytutil.app"
+        app="$tmp/Keyutil.app"
         mkdir -p "$app/Contents/MacOS"
-        cp "$CACHE/release/keytutil" "$app/Contents/MacOS/keytutil"
+        cp "$CACHE/release/keyutil" "$app/Contents/MacOS/keyutil"
         mkdir -p "$app/Contents/Resources"
-        if "$app/Contents/MacOS/keytutil" --iconset "$tmp/keytutil.iconset" && iconutil -c icns "$tmp/keytutil.iconset" -o "$app/Contents/Resources/keytutil.icns"; then :; fi
+        if "$app/Contents/MacOS/keyutil" --iconset "$tmp/keyutil.iconset" && iconutil -c icns "$tmp/keyutil.iconset" -o "$app/Contents/Resources/keyutil.icns"; then :; fi
         cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-  <key>CFBundleName</key><string>Keytutil</string>
-  <key>CFBundleDisplayName</key><string>Keytutil</string>
-  <key>CFBundleIdentifier</key><string>io.github.airylp.keytutil</string>
-  <key>CFBundleExecutable</key><string>keytutil</string>
-  <key>CFBundleIconFile</key><string>keytutil</string>
+  <key>CFBundleName</key><string>Keyutil</string>
+  <key>CFBundleDisplayName</key><string>Keyutil</string>
+  <key>CFBundleIdentifier</key><string>io.github.airylp.keyutil</string>
+  <key>CFBundleExecutable</key><string>keyutil</string>
+  <key>CFBundleIconFile</key><string>keyutil</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$version</string>
   <key>CFBundleVersion</key><string>$version</string>
@@ -310,7 +314,7 @@ PLIST
         codesign --force --deep -s - "$app" 2>/dev/null || true
         colocar_app "$app"
     else
-        colocar_bin "$CACHE/release/keytutil"
+        colocar_bin "$CACHE/release/keyutil"
     fi
     terminar "$etiqueta"
 }
@@ -324,7 +328,7 @@ case "$ACCION" in
         if ruta="$(instalado)"; then
             actual="$(cat "$MARCA" 2>/dev/null || echo '?')"
             if hay_terminal; then
-                printf '%s\n  1) %s\n  2) %s\n  3) %s\n' "$(m "keytutil $actual ya está instalado ($ruta)." "keytutil $actual is already installed ($ruta)." "keytutil $actual est déjà installé ($ruta).")" \
+                printf '%s\n  1) %s\n  2) %s\n  3) %s\n' "$(m "keyutil $actual ya está instalado ($ruta)." "keyutil $actual is already installed ($ruta)." "keyutil $actual est déjà installé ($ruta).")" \
                     "$(m 'Actualizar' 'Update' 'Mettre à jour')" "$(m 'Desinstalar' 'Uninstall' 'Désinstaller')" "$(m 'Cancelar' 'Cancel' 'Annuler')" > /dev/tty
                 leer "[1-3] (Enter = 1): "
                 case "${r:-1}" in
@@ -336,7 +340,7 @@ case "$ACCION" in
                 instalar
             fi
         elif hay_terminal; then
-            if pregunta "$(m '¿Instalar keytutil?' 'Install keytutil?' 'Installer keytutil ?')"; then instalar; else info "$(m 'Cancelado.' 'Cancelled.' 'Annulé.')"; fi
+            if pregunta "$(m '¿Instalar keyutil?' 'Install keyutil?' 'Installer keyutil ?')"; then instalar; else info "$(m 'Cancelado.' 'Cancelled.' 'Annulé.')"; fi
         else
             instalar
         fi

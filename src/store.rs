@@ -1,12 +1,12 @@
-//! Configuración de keytutil: sesión (idioma, tema, almacenes recientes) y
+//! Configuración de keyutil: sesión (idioma, tema, almacenes recientes) y
 //! copias de seguridad de los almacenes antes de sobrescribirlos.
 
 use serde::{Deserialize, Serialize};
 use std::io;
 use std::path::{Path, PathBuf};
 
-/// Carpeta de configuración: `~/Library/Application Support/keytutil`
-/// (macOS), `%APPDATA%\keytutil` (Windows) o `~/.config/keytutil`.
+/// Carpeta de configuración: `~/Library/Application Support/keyutil`
+/// (macOS), `%APPDATA%\keyutil` (Windows) o `~/.config/keyutil`.
 pub fn config_dir() -> Option<PathBuf> {
     let env = |k| std::env::var_os(k).filter(|v| !v.is_empty()).map(PathBuf::from);
     let base = if cfg!(target_os = "macos") {
@@ -16,7 +16,14 @@ pub fn config_dir() -> Option<PathBuf> {
     } else {
         env("XDG_CONFIG_HOME").or_else(|| env("HOME").map(|h| h.join(".config")))
     };
-    Some(base?.join("keytutil"))
+    let base = base?;
+    let dir = base.join("keyutil");
+    // Hasta la 0.1.3 la app se llamaba «keytutil»: se conserva su configuración.
+    let vieja = base.join("keytutil");
+    if !dir.exists() && vieja.is_dir() {
+        let _ = std::fs::rename(&vieja, &dir);
+    }
+    Some(dir)
 }
 
 /// Copias de los almacenes tal como estaban antes de guardarlos.
@@ -125,7 +132,7 @@ pub fn backup(path: &Path, bytes: &[u8]) -> io::Result<PathBuf> {
 /// el destino.
 pub fn write_elevated(dest: &Path, data: &[u8]) -> Result<(), String> {
     use std::process::Command;
-    let tmp = std::env::temp_dir().join(format!("keytutil-{}-{}", std::process::id(), crate::cert::stamp_now()));
+    let tmp = std::env::temp_dir().join(format!("keyutil-{}-{}", std::process::id(), crate::cert::stamp_now()));
     std::fs::write(&tmp, data).map_err(|e| e.to_string())?;
     let status = if cfg!(target_os = "macos") {
         let q = |p: &Path| p.display().to_string().replace('\\', "\\\\").replace('"', "\\\"");
@@ -179,7 +186,7 @@ mod tests {
 
     #[test]
     fn atomic_write_keeps_permissions() {
-        let d = std::env::temp_dir().join(format!("keytutil-test-escribir-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("keyutil-test-escribir-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         let f = d.join("cacerts");
         write_atomic(&f, b"uno").unwrap();

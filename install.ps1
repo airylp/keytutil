@@ -1,6 +1,6 @@
-# keytutil para Windows: descarga el instalador de la última versión y lo abre.
+# keyutil para Windows: descarga el instalador de la última versión y lo abre.
 #
-#   [Net.ServicePointManager]::SecurityProtocol = 'Tls12'; irm https://raw.githubusercontent.com/airylp/keytutil/main/install.ps1 | iex
+#   [Net.ServicePointManager]::SecurityProtocol = 'Tls12'; irm https://raw.githubusercontent.com/airylp/keyutil/main/install.ps1 | iex
 #
 # El instalador lo crea .github/workflows/release.yml en GitHub Releases.
 # Descargado así no lleva la marca «de Internet», así que Windows no muestra
@@ -11,11 +11,11 @@ $ProgressPreference = 'SilentlyContinue'   # Invoke-WebRequest va mucho más rá
 # Windows PowerShell 5.1 no activa TLS 1.2 por omisión (GitHub lo exige).
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
-$repo = if ($env:KEYTUTIL_REPO) { $env:KEYTUTIL_REPO } else { 'airylp/keytutil' }
+$repo = if ($env:KEYUTIL_REPO) { $env:KEYUTIL_REPO } else { 'airylp/keyutil' }
 $lang = (Get-UICulture).TwoLetterISOLanguageName
 function m($es, $en, $fr) { switch ($lang) { 'es' { $es } 'fr' { $fr } default { $en } } }
 
-Write-Host (m '==> Buscando la última versión de keytutil...' '==> Looking for the latest version of keytutil...' '==> Recherche de la dernière version de keytutil...')
+Write-Host (m '==> Buscando la última versión de keyutil...' '==> Looking for the latest version of keyutil...' '==> Recherche de la dernière version de keyutil...')
 # La más reciente aunque sea «pre-release» (releases/latest no las incluye).
 $rels = Invoke-RestMethod -UseBasicParsing "https://api.github.com/repos/$repo/releases?per_page=1"
 $rel = $rels[0]
@@ -33,7 +33,7 @@ Write-Host (m '==> Abriendo el instalador...' '==> Opening the installer...' "==
 try {
     $p = Start-Process -FilePath $file -PassThru -Wait
     if ($p.ExitCode -eq 0) {
-        Write-Host (m "==> keytutil $($rel.tag_name) instalado." "==> keytutil $($rel.tag_name) installed." "==> keytutil $($rel.tag_name) installé.")
+        Write-Host (m "==> keyutil $($rel.tag_name) instalado." "==> keyutil $($rel.tag_name) installed." "==> keyutil $($rel.tag_name) installé.")
     }
 } finally {
     Remove-Item $file -ErrorAction SilentlyContinue

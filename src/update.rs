@@ -1,4 +1,4 @@
-//! Actualizar keytutil desde la propia interfaz.
+//! Actualizar keyutil desde la propia interfaz.
 //!
 //! Compara la versión con la última publicada en GitHub Releases (incluye
 //! prototipos, como `install.sh`).
@@ -15,9 +15,9 @@ use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
 
-/// Repositorio en GitHub (usuario/repo). `KEYTUTIL_REPO` lo cambia.
+/// Repositorio en GitHub (usuario/repo). `KEYUTIL_REPO` lo cambia.
 fn repo() -> String {
-    std::env::var("KEYTUTIL_REPO").unwrap_or_else(|_| "airylp/keytutil".to_string())
+    std::env::var("KEYUTIL_REPO").unwrap_or_else(|_| "airylp/keyutil".to_string())
 }
 
 /// ¿Se puede actualizar desde la app en esta plataforma?
@@ -26,7 +26,7 @@ pub const SUPPORTED: bool = cfg!(any(target_os = "macos", target_os = "linux", w
 /// En Windows se actualiza con el instalador publicado.
 pub const WINDOWS: bool = cfg!(windows);
 
-/// Actualizar compila el código (buscador, conector) o descarga lo publicado (keytutil).
+/// Actualizar compila el código (buscador, conector) o descarga lo publicado (keyutil).
 pub const COMPILES: bool = false;
 
 /// Versión publicada con la que se compiló (tag, p. ej. «v0.2.0»; la graba el
@@ -35,7 +35,7 @@ pub fn current_version() -> Option<&'static str> {
     use std::sync::OnceLock;
     static V: OnceLock<Option<&'static str>> = OnceLock::new();
     *V.get_or_init(|| {
-        if let Some(v) = option_env!("KEYTUTIL_VERSION").filter(|s| !s.is_empty()) {
+        if let Some(v) = option_env!("KEYUTIL_VERSION").filter(|s| !s.is_empty()) {
             return Some(v);
         }
         // Instalada con install.sh: la versión que dejó en la configuración.
@@ -79,7 +79,7 @@ fn parse_release(json: &str) -> Option<(String, Option<String>)> {
 
 /// Commit con el que se compiló (lo graban `install.sh` / `empaquetar-mac.sh`).
 pub fn current_commit() -> Option<&'static str> {
-    option_env!("KEYTUTIL_COMMIT").filter(|s| !s.is_empty())
+    option_env!("KEYUTIL_COMMIT").filter(|s| !s.is_empty())
 }
 
 pub fn version_label() -> String {
@@ -190,7 +190,7 @@ impl Updater {
                 let new = match url {
                     None => Stage::Failed(t!("no hay instalador publicado").into()),
                     Some(url) => {
-                        let target = std::env::temp_dir().join("keytutil-setup.exe");
+                        let target = std::env::temp_dir().join("keyutil-setup.exe");
                         log.lock().unwrap().push(format!("curl {url}"));
                         ctx.request_repaint();
                         match hidden(Command::new("curl").args(["-fsSL", "-o"]).arg(&target).arg(&url)).output() {
@@ -208,25 +208,25 @@ impl Updater {
             });
             return;
         }
-        // `KEYTUTIL_DESTINO` solo en pruebas: con él install.sh no crea la entrada
+        // `KEYUTIL_DESTINO` solo en pruebas: con él install.sh no crea la entrada
         // del menú ni los íconos (la instalación normal va a su sitio de siempre).
-        let dest = std::env::var_os("KEYTUTIL_DESTINO").map(PathBuf::from);
+        let dest = std::env::var_os("KEYUTIL_DESTINO").map(PathBuf::from);
         std::thread::spawn(move || {
-            // `KEYTUTIL_INSTALL_SH` (pruebas) usa un install.sh local en vez del de GitHub.
-            let script = match std::env::var("KEYTUTIL_INSTALL_SH") {
+            // `KEYUTIL_INSTALL_SH` (pruebas) usa un install.sh local en vez del de GitHub.
+            let script = match std::env::var("KEYUTIL_INSTALL_SH") {
                 Ok(p) => format!("exec 2>&1\nsh '{p}' instalar"),
                 Err(_) => format!(
-                    "exec 2>&1\nset -e\nF=\"${{TMPDIR:-/tmp}}/keytutil-install.sh\"\n# Se borra siempre, también si algo falla.\ntrap 'rm -f \"$F\"' EXIT INT TERM\ncurl -fsSL https://raw.githubusercontent.com/{}/main/install.sh -o \"$F\"\nsh \"$F\" instalar",
+                    "exec 2>&1\nset -e\nF=\"${{TMPDIR:-/tmp}}/keyutil-install.sh\"\n# Se borra siempre, también si algo falla.\ntrap 'rm -f \"$F\"' EXIT INT TERM\ncurl -fsSL https://raw.githubusercontent.com/{}/main/install.sh -o \"$F\"\nsh \"$F\" instalar",
                     repo()
                 ),
             };
             let mut cmd = Command::new("sh");
             cmd.args(["-c", &script]).env("PATH", path_env()).stdin(Stdio::null()).stdout(Stdio::piped()).stderr(Stdio::null());
             if let Some(d) = &dest {
-                cmd.env("KEYTUTIL_DESTINO", d);
+                cmd.env("KEYUTIL_DESTINO", d);
             }
             // La app se reinicia sola al terminar («Reiniciar ahora»): el script no la cierra.
-            cmd.env("KEYTUTIL_NO_CERRAR", "1");
+            cmd.env("KEYUTIL_NO_CERRAR", "1");
             // Que la app abierta no se cierre: install.sh solo la reabre si la cerró él.
             let mut child = match cmd.spawn() {
                 Ok(c) => c,
@@ -285,10 +285,10 @@ impl Updater {
 /// otra instancia del mismo .app mientras la vieja seguía viva no funcionaba.
 ///
 /// Windows: `installed` es el instalador descargado; se ejecuta en silencio
-/// cuando la app ya terminó y él mismo vuelve a abrir keytutil.
+/// cuando la app ya terminó y él mismo vuelve a abrir keyutil.
 pub fn relaunch_after_exit(installed: &std::path::Path) -> std::io::Result<()> {
     if WINDOWS {
-        // El instalador no abre keytutil en modo silencioso (`skipifsilent`): lo abre
+        // El instalador no abre keyutil en modo silencioso (`skipifsilent`): lo abre
         // este script al terminar, con la misma ruta (la instalación conserva la carpeta).
         let exe = std::env::current_exe().unwrap_or_default();
         let ps = format!(
@@ -324,7 +324,7 @@ mod tests {
     #[cfg(target_os = "linux")]
     #[test]
     fn relanzar_al_salir() {
-        let dir = std::env::temp_dir().join(format!("keytutil-relanzar-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("keyutil-relanzar-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let (prog, marca) = (dir.join("nuevo.sh"), dir.join("abierto"));
         std::fs::write(&prog, format!("#!/bin/sh\necho si > '{}'\n", marca.display())).unwrap();
@@ -334,7 +334,7 @@ mod tests {
         let exe = std::env::current_exe().unwrap();
         let mut viejo = Command::new(exe)
             .args(["--exact", "update::tests::hijo_relanza", "--ignored", "--nocapture"])
-            .env("KEYTUTIL_RELANZAR", &prog)
+            .env("KEYUTIL_RELANZAR", &prog)
             .stdout(Stdio::null())
             .spawn()
             .unwrap();
@@ -352,7 +352,7 @@ mod tests {
     #[test]
     #[ignore]
     fn hijo_relanza() {
-        let Ok(p) = std::env::var("KEYTUTIL_RELANZAR") else { return };
+        let Ok(p) = std::env::var("KEYUTIL_RELANZAR") else { return };
         relaunch_after_exit(std::path::Path::new(&p)).unwrap();
         std::thread::sleep(std::time::Duration::from_millis(800));
     }
@@ -360,10 +360,10 @@ mod tests {
     #[test]
     fn release_json() {
         let j = r#"[{"url":"x","tag_name": "v0.2.0","assets":[{"name":"a.zip","browser_download_url":"https://h/releases/download/v0.2.0/a.zip"},
-            {"name":"keytutil-0.2.0-setup.exe","browser_download_url":"https://github.com/airylp/keytutil/releases/download/v0.2.0/keytutil-0.2.0-setup.exe"}]}]"#;
+            {"name":"keyutil-0.2.0-setup.exe","browser_download_url":"https://github.com/airylp/keyutil/releases/download/v0.2.0/keyutil-0.2.0-setup.exe"}]}]"#;
         assert_eq!(
             parse_release(j),
-            Some(("v0.2.0".into(), Some("https://github.com/airylp/keytutil/releases/download/v0.2.0/keytutil-0.2.0-setup.exe".into())))
+            Some(("v0.2.0".into(), Some("https://github.com/airylp/keyutil/releases/download/v0.2.0/keyutil-0.2.0-setup.exe".into())))
         );
         assert_eq!(parse_release(r#"[{"tag_name":"v1","assets":[]}]"#), Some(("v1".into(), None)));
         assert_eq!(parse_release("[]"), None);
@@ -371,12 +371,12 @@ mod tests {
 
     #[test]
     fn ansi_codes_removed() {
-        assert_eq!(strip_ansi("\u{1b}[1;34m==>\u{1b}[0m Instalado: /x/keytutil"), "==> Instalado: /x/keytutil");
+        assert_eq!(strip_ansi("\u{1b}[1;34m==>\u{1b}[0m Instalado: /x/keyutil"), "==> Instalado: /x/keyutil");
     }
 
     /// Prueba completa (tarda: compila todo) con un install.sh local, instalando
     /// en una carpeta temporal:
-    /// KEYTUTIL_INSTALL_SH=$PWD/install.sh KEYTUTIL_DESTINO=/tmp/x \
+    /// KEYUTIL_INSTALL_SH=$PWD/install.sh KEYUTIL_DESTINO=/tmp/x \
     ///   cargo test --release actualizar -- --ignored --nocapture
     #[test]
     #[ignore]

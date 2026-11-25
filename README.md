@@ -1,4 +1,4 @@
-# keytutil
+# keyutil
 
 Administra los certificados de confianza de Java (`cacerts`, *truststores*) sin pelearse con
 `keytool`: agregar los certificados de un servidor con un clic, quitar y exportar. App de escritorio
@@ -9,13 +9,13 @@ en Rust + egui para macOS, Windows y Linux.
 macOS y Linux (descarga la última versión publicada; vuelve a ejecutarlo para actualizar o desinstalar):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/airylp/keytutil/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/airylp/keyutil/main/install.sh | sh
 ```
 
 Windows (PowerShell):
 
 ```powershell
-[Net.ServicePointManager]::SecurityProtocol = 'Tls12'; irm https://raw.githubusercontent.com/airylp/keytutil/main/install.ps1 | iex
+[Net.ServicePointManager]::SecurityProtocol = 'Tls12'; irm https://raw.githubusercontent.com/airylp/keyutil/main/install.ps1 | iex
 ```
 
 Para compilarlo con lo último de `main`: `… | sh -s -- compilar`.
@@ -37,7 +37,7 @@ Para compilarlo con lo último de `main`: `… | sh -s -- compilar`.
   convierte entre JKS y PKCS12 o cambia la contraseña.
 - Las entradas con clave privada se conservan tal cual.
 
-Lo que escribe keytutil lo abren `keytool` de Java 8 y 21 sin errores de integridad (probado con
+Lo que escribe keyutil lo abren `keytool` de Java 8 y 21 sin errores de integridad (probado con
 los `cacerts` reales de ambos).
 
 ## Licencia

@@ -426,6 +426,7 @@ pub mod tests {
         let aliases: Vec<_> = ks.entries.iter().map(|e| e.alias.as_str()).collect();
         assert_eq!(aliases, ["raiz", "servidor"]);
         assert!(ks.entries.iter().all(|e| e.added_ms.is_some() && e.info.is_some()));
+        // El fixture se generó cuando la app se llamaba «keytutil».
         assert_eq!(ks.entries[1].info.as_ref().unwrap().cn, "servidor.keytutil.test");
         assert_eq!(Keystore::open(JKS, "otra").unwrap_err(), OpenError::Password);
         // Sin contraseña: se prueba la de fábrica.
@@ -503,11 +504,11 @@ pub mod tests {
         assert_eq!(kinds, [("raiz", Kind::Trusted, 1), ("servidor", Kind::KeyPair, 2)]);
     }
 
-    /// Los cacerts reales de Java 8 (JKS) y 21 (PKCS12): KEYTUTIL_CACERTS=ruta1:ruta2.
+    /// Los cacerts reales de Java 8 (JKS) y 21 (PKCS12): KEYUTIL_CACERTS=ruta1:ruta2.
     #[test]
     #[ignore]
     fn real_cacerts() {
-        let Ok(list) = std::env::var("KEYTUTIL_CACERTS") else { return };
+        let Ok(list) = std::env::var("KEYUTIL_CACERTS") else { return };
         for p in list.split(':') {
             let data = std::fs::read(p).unwrap();
             let (ks, pw) = Keystore::open(&data, "").unwrap();
@@ -515,7 +516,7 @@ pub mod tests {
             assert!(ks.entries.len() > 50 && ks.entries.iter().all(|e| e.info.is_some()));
             let out = ks.write(ks.format, "changeit").unwrap();
             assert_eq!(Keystore::open(&out, "changeit").unwrap().0.entries.len(), ks.entries.len());
-            if let Ok(dir) = std::env::var("KEYTUTIL_SALIDA") {
+            if let Ok(dir) = std::env::var("KEYUTIL_SALIDA") {
                 std::fs::write(format!("{dir}/{}.salida", std::path::Path::new(p).file_name().unwrap().to_string_lossy()), out).unwrap();
             }
         }

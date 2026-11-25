@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn finds_jdks_in_folder_and_dedupes_links() {
-        let d = std::env::temp_dir().join(format!("keytutil-test-java-{}", std::process::id()));
+        let d = std::env::temp_dir().join(format!("keyutil-test-java-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&d);
         let a = d.join(".jdks/temurin-21");
         std::fs::create_dir_all(a.join("lib/security")).unwrap();
