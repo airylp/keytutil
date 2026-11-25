@@ -207,6 +207,11 @@ pub struct App {
     dialog: Option<Dialog>,
     pick: Option<PendingPick>,
     java: Vec<crate::java::Found>,
+    /// Datos de los cacerts y recientes de la página inicial (se leen en un hilo).
+    store_info: std::collections::HashMap<PathBuf, StoreInfo>,
+    /// Rutas ya pedidas al hilo (para no repetirlas).
+    store_info_asked: std::collections::HashSet<PathBuf>,
+    store_info_ch: (std::sync::mpsc::Sender<(PathBuf, StoreInfo)>, Receiver<(PathBuf, StoreInfo)>),
     /// Guardado con permisos de administrador en curso.
     elevated: Option<(PathBuf, Vec<u8>, Receiver<Result<(), String>>)>,
     /// Ya se confirmó cerrar con cambios sin guardar.
@@ -382,6 +387,9 @@ impl App {
             dialog: None,
             pick: None,
             java: crate::java::find(),
+            store_info: Default::default(),
+            store_info_asked: Default::default(),
+            store_info_ch: channel(),
             elevated: None,
             close_ok: false,
             screenshot,
@@ -404,6 +412,9 @@ impl App {
 
     /// Abre un almacén o, si es un certificado y hay almacén abierto, ofrece agregarlo.
     fn open_path(&mut self, path: PathBuf) {
+        // Puede cambiar mientras está abierto: al volver a la página inicial se vuelve a leer.
+        self.store_info.remove(&path);
+        self.store_info_asked.remove(&path);
         let data = match std::fs::read(&path) {
             Ok(d) => d,
             Err(e) => return self.avisos.error(tf!("No se pudo leer {f}: {e}", f = path.display(), e = e)),
@@ -1280,26 +1291,145 @@ impl App {
         }
     }
 
-    fn welcome(&mut self, ui: &mut Ui) {
-        let logo = crate::estilo::logo(ui.ctx(), &mut self.logo);
-        let mut acciones: Vec<(Icon, String, String)> = vec![
-            (Icon::Open, t!("Abrir almacén…").into(), t!("JKS o PKCS12 (cacerts, truststore, keystore)").into()),
-            (Icon::New, t!("Nuevo almacén").into(), t!("Un almacén vacío al que agregar certificados").into()),
-        ];
-        for j in self.java.iter().take(5) {
-            acciones.push((Icon::Cup, tf!("cacerts de {j}", j = j.label), j.path.display().to_string()));
+    /// Lee en un hilo cuántos certificados tiene cada cacerts (y los recientes) y si
+    /// se puede escribir sin permisos de administrador.
+    fn scan_store_info(&mut self, ctx: &Context) {
+        let mut paths: Vec<PathBuf> = self.java.iter().map(|j| j.path.clone()).collect();
+        paths.extend(self.session.recent.iter().filter(|p| p.is_file()).cloned());
+        paths.retain(|p| !self.store_info_asked.contains(p));
+        if paths.is_empty() {
+            return;
         }
-        let refs: Vec<(Icon, &str, &str)> = acciones.iter().map(|(i, a, b)| (*i, a.as_str(), b.as_str())).collect();
-        let pie = if self.java.is_empty() { t!("No se encontró ningún Java instalado: abre el cacerts a mano o arrastra aquí un archivo.") } else { t!("También puedes arrastrar aquí un almacén o un certificado.") };
-        let ctx = ui.ctx().clone();
-        match crate::estilo::bienvenida(ui, &logo, &refs, Some(pie)) {
-            Some(0) => self.pick(Pick::Open, &ctx),
-            Some(1) => self.dialog = Some(Dialog::NewStore { format: Format::Pkcs12, password: crate::keystore::DEFAULT_PASSWORD.into() }),
-            Some(i) => {
-                let p = self.java[i - 2].path.clone();
-                self.open_path(p);
+        self.store_info_asked.extend(paths.iter().cloned());
+        let tx = self.store_info_ch.0.clone();
+        let ctx = ctx.clone();
+        std::thread::spawn(move || {
+            for p in paths {
+                let count = std::fs::read(&p).ok().and_then(|d| Keystore::open(&d, crate::keystore::DEFAULT_PASSWORD).ok()).map(|(ks, _)| ks.entries.len());
+                let writable = std::fs::OpenOptions::new().append(true).open(&p).is_ok();
+                if tx.send((p, StoreInfo { count, writable })).is_err() {
+                    return;
+                }
+                ctx.request_repaint();
             }
+        });
+    }
+
+    fn welcome(&mut self, ui: &mut Ui) {
+        let ctx = ui.ctx().clone();
+        // Pide lo que falte (cacerts nuevos, almacenes abiertos después) y recoge lo leído.
+        self.scan_store_info(&ctx);
+        for (p, info) in self.store_info_ch.1.try_iter() {
+            self.store_info.insert(p, info);
+        }
+        let p = Paleta::de(ui);
+        let logo = crate::estilo::logo(&ctx, &mut self.logo);
+        let mut open: Option<PathBuf> = None;
+        let mut action: Option<usize> = None;
+        let mut rescan = false;
+        let view_h = ui.available_height();
+        ScrollArea::vertical().id_salt("inicio").auto_shrink(false).show(ui, |ui| {
+            let w = (ui.available_width() - 32.0).min(880.0);
+            let r = ui.available_rect_before_wrap();
+            let col = Rect::from_min_size(pos2(r.center().x - w / 2.0, r.top()), vec2(w, view_h.max(400.0)));
+            {
+                ui.scope_builder(UiBuilder::new().max_rect(col).layout(Layout::top_down(Align::Min)), |ui| {
+                    ui.set_width(w);
+                    ui.add_space(22.0);
+                    // Cabecera: logo, nombre y para qué sirve.
+                    ui.horizontal(|ui| {
+                        ui.add(Image::new(&logo).fit_to_exact_size(vec2(64.0, 64.0)));
+                        ui.add_space(8.0);
+                        ui.vertical(|ui| {
+                            ui.add_space(4.0);
+                            ui.label(RichText::new(crate::APP.nombre).size(24.0).strong().color(crate::estilo::acento_texto(ui)));
+                            ui.label(RichText::new((crate::APP.descripcion)()).color(p.texto));
+                            ui.label(RichText::new(t!("Agrega los certificados de un servidor, quita los que sobran y exporta lo que necesites.")).color(p.apagado));
+                        });
+                    });
+                    ui.add_space(18.0);
+                    // Acciones principales y el aviso de arrastrar.
+                    let gap = 12.0;
+                    let cw = (w - gap * 2.0) / 3.0;
+                    ui.horizontal(|ui| {
+                        ui.spacing_mut().item_spacing.x = gap;
+                        if accion_inicio(ui, cw, Icon::Open, t!("Abrir almacén…"), t!("JKS o PKCS12: cacerts, truststore, keystore"), true) {
+                            action = Some(0);
+                        }
+                        if accion_inicio(ui, cw, Icon::New, t!("Nuevo almacén"), t!("Uno vacío al que agregar certificados"), true) {
+                            action = Some(1);
+                        }
+                        accion_inicio(ui, cw, Icon::Download, t!("Arrastra aquí un archivo"), t!("Un almacén o un certificado (.pem, .cer, .crt)"), false);
+                    });
+                    ui.add_space(20.0);
+                    // Cacerts de los Java instalados.
+                    ui.horizontal(|ui| {
+                        ui.label(RichText::new(t!("CACERTS DE JAVA EN ESTE EQUIPO")).size(11.0).strong().color(p.apagado).extra_letter_spacing(0.6));
+                        if !self.java.is_empty() {
+                            crate::estilo::insignia(ui, &self.java.len().to_string(), crate::estilo::acento());
+                        }
+                        ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                            if ui.add(IconButton::new(Icon::Reload, Tone::File).label(t!("Buscar otra vez"))).on_hover_text(t!("Vuelve a buscar los Java instalados")).clicked() {
+                                rescan = true;
+                            }
+                        });
+                    });
+                    ui.add_space(4.0);
+                    if self.java.is_empty() {
+                        crate::estilo::alerta(ui, crate::estilo::Tipo::Info, t!("No se encontró ningún Java instalado. Abre el cacerts a mano (está en lib/security dentro del JDK) o arrástralo aquí."));
+                    } else {
+                        // Lo que no quepa se desplaza dentro de la tabla; deja sitio para los recientes.
+                        let n_recent = self.session.recent.iter().filter(|p| p.is_file()).take(5).count();
+                        let reserve = if n_recent == 0 { 30.0 } else { 90.0 + 46.0 * n_recent as f32 };
+                        let used = ui.cursor().min.y - col.top();
+                        let max_h = (view_h - used - reserve - 60.0).max(150.0);
+                        let rows: Vec<StoreRow> = self
+                            .java
+                            .iter()
+                            .map(|j| StoreRow {
+                                icon: Icon::Cup,
+                                title: j.label.clone(),
+                                note: (!j.shared.is_empty()).then(|| tf!("también lo usan: {lista}", lista = j.shared.join(", "))),
+                                path: j.path.clone(),
+                            })
+                            .collect();
+                        if let Some(p) = store_table(ui, "tabla_java", &rows, &self.store_info, max_h) {
+                            open = Some(p);
+                        }
+                    }
+                    // Recientes.
+                    let recent: Vec<StoreRow> = self
+                        .session
+                        .recent
+                        .iter()
+                        .filter(|p| p.is_file())
+                        .take(5)
+                        .map(|p| StoreRow { icon: Icon::Database, title: p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(), note: None, path: p.clone() })
+                        .collect();
+                    if !recent.is_empty() {
+                        ui.add_space(16.0);
+                        ui.label(RichText::new(t!("ABIERTOS HACE POCO")).size(11.0).strong().color(p.apagado).extra_letter_spacing(0.6));
+                        ui.add_space(4.0);
+                        if let Some(p) = store_table(ui, "tabla_recientes", &recent, &self.store_info, f32::INFINITY) {
+                            open = Some(p);
+                        }
+                    }
+                    ui.add_space(16.0);
+                });
+            }
+        });
+        if rescan {
+            self.java = crate::java::find();
+            self.store_info.clear();
+            self.store_info_asked.clear();
+        }
+        match action {
+            Some(0) => self.pick(Pick::Open, &ctx),
+            Some(_) => self.dialog = Some(Dialog::NewStore { format: Format::Pkcs12, password: crate::keystore::DEFAULT_PASSWORD.into() }),
             None => {}
+        }
+        if let Some(p) = open {
+            self.open_path(p);
         }
     }
 
@@ -2299,5 +2429,165 @@ impl eframe::App for App {
             self.last_session_save = Instant::now();
         }
         self.screenshot_step(&ctx);
+    }
+}
+/// Lo que se sabe de un almacén de la página inicial.
+#[derive(Clone, Copy, Debug)]
+struct StoreInfo {
+    /// Certificados (con la contraseña habitual «changeit»); `None` = no se pudo leer.
+    count: Option<usize>,
+    /// Se puede guardar sin permisos de administrador.
+    writable: bool,
+}
+
+struct StoreRow {
+    icon: Icon,
+    title: String,
+    note: Option<String>,
+    path: PathBuf,
+}
+
+/// Ruta para mostrar en `max` caracteres: la carpeta personal como «~» y, si no
+/// cabe, cortada en medio (el principio y el final son lo que dice dónde está).
+fn short_path(path: &Path, max: usize) -> String {
+    let home = std::env::var_os(if cfg!(windows) { "USERPROFILE" } else { "HOME" }).map(PathBuf::from);
+    let s = match home.as_deref().and_then(|h| path.strip_prefix(h).ok()) {
+        Some(rest) if !rest.as_os_str().is_empty() => format!("~{}{}", std::path::MAIN_SEPARATOR, rest.display()),
+        _ => path.display().to_string(),
+    };
+    let chars: Vec<char> = s.chars().collect();
+    if chars.len() <= max {
+        return s;
+    }
+    let head = (max / 3).max(4);
+    let tail = max.saturating_sub(head + 1).max(4);
+    format!("{}…{}", chars[..head].iter().collect::<String>(), chars[chars.len() - tail..].iter().collect::<String>())
+}
+
+/// Tarjeta de acción de la página inicial (pulsable o solo informativa).
+fn accion_inicio(ui: &mut Ui, w: f32, icon: Icon, title: &str, sub: &str, clickable: bool) -> bool {
+    let p = Paleta::de(ui);
+    let sense = if clickable { Sense::click() } else { Sense::hover() };
+    let (rect, r) = ui.allocate_exact_size(vec2(w, 76.0), sense);
+    let hover = clickable && r.hovered();
+    let fill = if hover { ui.visuals().widgets.hovered.weak_bg_fill } else { p.tarjeta };
+    let stroke = if hover { Stroke::new(1.0, crate::estilo::acento()) } else { Stroke::new(1.0, p.borde) };
+    ui.painter().rect(rect, 10.0, if clickable { fill } else { Color32::TRANSPARENT }, stroke, StrokeKind::Inside);
+    let mut child = ui.new_child(UiBuilder::new().max_rect(rect.shrink2(vec2(14.0, 12.0))).layout(Layout::left_to_right(Align::Center)));
+    let (ir, _) = child.allocate_exact_size(vec2(24.0, 24.0), Sense::hover());
+    crate::icons::paint(child.painter(), ir, icon);
+    child.add_space(6.0);
+    child.vertical(|ui| {
+        let color = if clickable { p.texto } else { p.apagado };
+        ui.add(Label::new(RichText::new(title).strong().color(color)).truncate());
+        ui.add(Label::new(RichText::new(sub).small().color(p.apagado)).wrap());
+    });
+    if clickable { r.on_hover_cursor(CursorIcon::PointingHand).clicked() } else { false }
+}
+
+/// Tabla de almacenes: nombre, certificados, ubicación y «Abrir». Doble clic en
+/// la fila también abre. Devuelve el elegido.
+fn store_table(ui: &mut Ui, id: &str, rows: &[StoreRow], info: &std::collections::HashMap<PathBuf, StoreInfo>, max_h: f32) -> Option<PathBuf> {
+    let p = Paleta::de(ui);
+    let mut open = None;
+    let row_h = 46.0;
+    Frame::new().fill(p.tarjeta).stroke(Stroke::new(1.0, p.borde)).corner_radius(10.0).inner_margin(Margin::symmetric(4, 4)).show(ui, |ui| {
+        ui.set_width(ui.available_width());
+        let w = ui.available_width();
+        let (c_name, c_count, c_btn) = ((w * 0.34).max(160.0), 120.0, 84.0);
+        let c_path = (w - c_name - c_count - c_btn - 24.0).max(80.0);
+        // Cabecera.
+        ui.horizontal(|ui| {
+            ui.spacing_mut().item_spacing.x = 0.0;
+            ui.add_space(16.0);
+            for (t, cw) in [(t!("Almacén"), c_name), (t!("Certificados"), c_count), (t!("Ubicación"), c_path)] {
+                ui.allocate_ui_with_layout(vec2(cw, 22.0), Layout::left_to_right(Align::Center), |ui| {
+                    ui.set_min_width(cw);
+                    ui.label(RichText::new(t).small().strong().color(p.apagado));
+                });
+            }
+        });
+        let sep = ui.cursor().min.y;
+        ui.painter().hline(ui.max_rect().x_range(), sep, Stroke::new(1.0, p.borde));
+        ui.add_space(2.0);
+        ScrollArea::vertical().id_salt(id).max_height(max_h).auto_shrink([false, true]).show(ui, |ui| {
+            for (k, row) in rows.iter().enumerate() {
+                let (rect, r) = ui.allocate_exact_size(vec2(ui.available_width(), row_h), Sense::click());
+                if r.hovered() {
+                    ui.painter().rect_filled(rect, 6.0, ui.visuals().widgets.hovered.weak_bg_fill);
+                }
+                if k + 1 < rows.len() {
+                    ui.painter().hline(rect.x_range().shrink(8.0), rect.max.y, Stroke::new(1.0, p.borde.gamma_multiply(0.6)));
+                }
+                if r.double_clicked() {
+                    open = Some(row.path.clone());
+                }
+                let inner = rect.shrink2(vec2(12.0, 0.0));
+                let cell = |x: f32, cw: f32| Rect::from_min_size(pos2(inner.left() + x, inner.top()), vec2(cw, row_h));
+                // Cada celda centrada a mano en vertical (en un Layout centrado los marcos se estiran).
+                let mut name = ui.new_child(UiBuilder::new().max_rect(cell(0.0, c_name - 8.0)).layout(Layout::top_down(Align::Min)));
+                name.add_space(if row.note.is_some() { 5.0 } else { 13.0 });
+                name.horizontal(|ui| {
+                    let (ir, _) = ui.allocate_exact_size(vec2(16.0, 16.0), Sense::hover());
+                    crate::icons::paint(ui.painter(), ir, row.icon);
+                    ui.add(Label::new(RichText::new(&row.title).strong().color(p.texto)).truncate());
+                });
+                if let Some(n) = &row.note {
+                    name.horizontal(|ui| {
+                        ui.add_space(24.0);
+                        ui.add(Label::new(RichText::new(n).small().color(p.apagado)).truncate()).on_hover_text(n);
+                    });
+                }
+                let inf = info.get(&row.path);
+                let mut count = ui.new_child(UiBuilder::new().max_rect(cell(c_name, c_count)).layout(Layout::top_down(Align::Min)));
+                count.add_space(13.0);
+                count.horizontal(|ui| match inf {
+                    None => {
+                        ui.spinner();
+                    }
+                    Some(StoreInfo { count: Some(n), .. }) => {
+                        crate::estilo::insignia(ui, &tf!("{n} certificados", n = n), crate::estilo::color_tipo(ui, crate::estilo::Tipo::Info));
+                    }
+                    Some(_) => {
+                        ui.label(RichText::new("—").color(p.apagado)).on_hover_text(t!("No se pudo leer con la contraseña «changeit»"));
+                    }
+                });
+                let mut place = ui.new_child(UiBuilder::new().max_rect(cell(c_name + c_count, c_path)).layout(Layout::top_down(Align::Min)));
+                place.add_space(14.0);
+                place.horizontal(|ui| {
+                    if inf.is_some_and(|i| !i.writable) {
+                        let (ir, lr) = ui.allocate_exact_size(vec2(14.0, 14.0), Sense::hover());
+                        crate::icons::paint(ui.painter(), ir, Icon::Lock);
+                        lr.on_hover_text(t!("Tu usuario no puede escribir en él: al guardar se pedirán permisos de administrador"));
+                    }
+                    let path = row.path.display().to_string();
+                    let cw = ui.fonts_mut(|f| f.glyph_width(&FontId::monospace(11.5), '0')).max(1.0);
+                    let max = ((ui.available_width() - 4.0) / cw).max(12.0) as usize;
+                    ui.add(Label::new(RichText::new(short_path(&row.path, max)).monospace().size(11.5).color(p.apagado)).truncate()).on_hover_text(&path);
+                });
+                let mut c = ui.new_child(UiBuilder::new().max_rect(inner).layout(Layout::right_to_left(Align::Center)));
+                c.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                    if ui.button(t!("Abrir")).clicked() {
+                        open = Some(row.path.clone());
+                    }
+                });
+            }
+        });
+    });
+    open
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn short_path_cuts_in_the_middle() {
+        let p = Path::new("/usr/lib/jvm/java-21-openjdk-amd64/lib/security/cacerts");
+        assert_eq!(short_path(p, 200), p.display().to_string());
+        let s = short_path(p, 30);
+        assert_eq!(s.chars().count(), 30);
+        assert!(s.starts_with("/usr/lib/j") && s.ends_with("security/cacerts") && s.contains('…'), "{s}");
     }
 }

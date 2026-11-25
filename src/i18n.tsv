@@ -357,3 +357,16 @@ vence {f}	expires {f}	expire le {f}
 Grafito claro	Light graphite	Graphite clair
 Grafito oscuro	Dark graphite	Graphite sombre
 Grafito: paneles en otro gris y separaciones marcadas	Graphite: panels in a different grey and clear separations	Graphite : panneaux d’un autre gris et séparations marquées
+Agrega los certificados de un servidor, quita los que sobran y exporta lo que necesites.	Add a server's certificates, remove the ones you don't need and export what you need.	Ajoutez les certificats d’un serveur, retirez ceux en trop et exportez ce dont vous avez besoin.
+JKS o PKCS12: cacerts, truststore, keystore	JKS or PKCS12: cacerts, truststore, keystore	JKS ou PKCS12 : cacerts, truststore, keystore
+Uno vacío al que agregar certificados	An empty one to add certificates to	Un magasin vide où ajouter des certificats
+Arrastra aquí un archivo	Drop a file here	Déposez un fichier ici
+Un almacén o un certificado (.pem, .cer, .crt)	A store or a certificate (.pem, .cer, .crt)	Un magasin ou un certificat (.pem, .cer, .crt)
+CACERTS DE JAVA EN ESTE EQUIPO	JAVA CACERTS ON THIS COMPUTER	CACERTS JAVA SUR CET ORDINATEUR
+Vuelve a buscar los Java instalados	Look for installed Java again	Rechercher à nouveau les Java installés
+No se encontró ningún Java instalado. Abre el cacerts a mano (está en lib/security dentro del JDK) o arrástralo aquí.	No installed Java was found. Open the cacerts by hand (it is in lib/security inside the JDK) or drop it here.	Aucun Java installé trouvé. Ouvrez le cacerts à la main (dans lib/security du JDK) ou déposez-le ici.
+también lo usan: {lista}	also used by: {lista}	aussi utilisé par : {lista}
+ABIERTOS HACE POCO	RECENTLY OPENED	OUVERTS RÉCEMMENT
+Ubicación	Location	Emplacement
+No se pudo leer con la contraseña «changeit»	Could not be read with the password “changeit”	Impossible de le lire avec le mot de passe « changeit »
+Tu usuario no puede escribir en él: al guardar se pedirán permisos de administrador	Your user cannot write to it: saving will ask for administrator rights	Votre utilisateur ne peut pas y écrire : l’enregistrement demandera des droits d’administrateur
