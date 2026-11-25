@@ -775,7 +775,7 @@ impl App {
             }
             ui.separator();
             let dirty = self.doc.as_ref().is_some_and(|d| d.dirty);
-            if ui.add_enabled(dirty, IconButton::new(Icon::Save, Tone::File).label(t!("Guardar"))).on_hover_text(t!("Guardar los cambios en el archivo (Ctrl+S)")).clicked() {
+            if ui.add_enabled(dirty, IconButton::new(Icon::Save, Tone::File).label(t!("Guardar")).primary()).on_hover_text(t!("Guardar los cambios en el archivo (Ctrl+S)")).clicked() {
                 self.save(&ctx);
             }
             if ui.add_enabled(has_doc, IconButton::new(Icon::Convert, Tone::File).label(t!("Guardar como…"))).on_hover_text(t!("Guardar en otro archivo, otro formato (JKS/PKCS12) u otra contraseña (Ctrl+Shift+S)")).clicked() {
@@ -884,6 +884,8 @@ impl App {
         let mut toggle_all = false;
         let mut sel_expired = false;
         ui.horizontal(|ui| {
+            // Fondo de la cabecera: se reserva antes para quedar debajo de la casilla.
+            let head_bg = ui.painter().add(Shape::Noop);
             let mut c = all_checked;
             if ui.checkbox(&mut c, "").on_hover_text(t!("Marcar o desmarcar los visibles (Ctrl+A)")).changed() {
                 toggle_all = true;
@@ -892,10 +894,13 @@ impl App {
             let c = cols(x);
             let y = ui.min_rect().center().y;
             let p = ui.painter();
-            let font = TextStyle::Small.resolve(ui.style());
-            let col = ui.visuals().weak_text_color();
+            let pal = Paleta::de(ui);
+            // Cabecera como `thead`: fondo gris, títulos pequeños en mayúsculas.
+            let head = Rect::from_min_max(pos2(x, ui.min_rect().top() - 4.0), pos2(x + w + 4.0, ui.min_rect().bottom() + 4.0));
+            p.set(head_bg, Shape::rect_filled(head, 6.0, pal.codigo));
+            let font = FontId::proportional(10.5);
             for (i, s) in [t!("Alias"), t!("Emitido para"), t!("Emitido por"), t!("Vence")].iter().enumerate() {
-                p.text(pos2(c[i], y), Align2::LEFT_CENTER, *s, font.clone(), col);
+                p.text(pos2(c[i], y), Align2::LEFT_CENTER, s.to_uppercase(), font.clone(), pal.apagado);
             }
         });
         ui.separator();
@@ -919,6 +924,8 @@ impl App {
                     ui.painter().rect_filled(rect, 4.0, g.gamma_multiply(if v.dark_mode { 0.22 } else { 0.16 }));
                     ui.painter().rect_filled(Rect::from_min_size(rect.min, vec2(3.0, rect.height())), 1.5, g);
                 }
+                // Filas separadas por una línea fina (como `divide-y`).
+                ui.painter().line_segment([pos2(rect.left(), rect.bottom() - 0.5), pos2(rect.right(), rect.bottom() - 0.5)], Stroke::new(1.0, Paleta::de(ui).borde.gamma_multiply(0.7)));
                 if focused {
                     ui.painter().rect_filled(rect, 4.0, v.selection.bg_fill.gamma_multiply(if new { 0.35 } else { 0.55 }));
                 } else if resp.hovered() {
@@ -1403,7 +1410,7 @@ impl App {
                     }
                     ui.add_space(6.0);
                     ui.horizontal(|ui| {
-                        ok |= ui.add(IconButton::new(Icon::Lock, Tone::File).label(t!("Abrir")).framed()).clicked();
+                        ok |= ui.add(IconButton::new(Icon::Lock, Tone::File).label(t!("Abrir")).framed().primary()).clicked();
                         if ui.button(t!("Abrir sin contraseña")).on_hover_text(t!("Solo JKS: se ven los certificados, pero hará falta la contraseña para guardar")).clicked() {
                             match Keystore::open(data, "") {
                                 Ok((mut ks, _)) if crate::keystore::is_jks(data) => {
@@ -1467,7 +1474,7 @@ impl App {
                         ui.weak(t!("Las claves privadas solo se pueden guardar en su formato original."));
                     }
                     ui.add_space(6.0);
-                    ok = ui.add_enabled(!password.is_empty(), IconButton::new(if new { Icon::New } else { Icon::Save }, Tone::File).label(if new { t!("Crear") } else { t!("Elegir archivo…") }).framed()).clicked();
+                    ok = ui.add_enabled(!password.is_empty(), IconButton::new(if new { Icon::New } else { Icon::Save }, Tone::File).label(if new { t!("Crear") } else { t!("Elegir archivo…") }).framed().primary()).clicked();
                 });
                 if ok {
                     keep = false;
@@ -1496,7 +1503,7 @@ impl App {
                         }
                     });
                     ui.weak(t!("Las aplicaciones Java que usan este almacén deben conocer la contraseña (javax.net.ssl.trustStorePassword)."));
-                    ok |= ui.add_enabled(!input.is_empty(), IconButton::new(Icon::Check, Tone::File).label(t!("Aceptar")).framed()).clicked();
+                    ok |= ui.add_enabled(!input.is_empty(), IconButton::new(Icon::Check, Tone::File).label(t!("Aceptar")).framed().primary()).clicked();
                 });
                 if ok && !input.is_empty() {
                     if let Some(doc) = &mut self.doc {
@@ -1525,7 +1532,7 @@ impl App {
                     ui.weak(t!("Las aplicaciones Java dejarán de confiar en los servidores que dependan de ellos. El archivo no cambia hasta guardar."));
                     ui.add_space(6.0);
                     ui.horizontal(|ui| {
-                        ok = ui.add(IconButton::new(Icon::Trash, Tone::Edit).label(t!("Quitar")).framed()).clicked();
+                        ok = ui.add(IconButton::new(Icon::Trash, Tone::Edit).label(t!("Quitar")).framed().primary()).clicked();
                         if ui.button(t!("Cancelar")).clicked() {
                             keep = false;
                         }
@@ -1547,7 +1554,7 @@ impl App {
                     ui.weak(t!("El cacerts de un Java instalado en el sistema suele ser del administrador."));
                     ui.add_space(8.0);
                     ui.horizontal(|ui| {
-                        if ui.add(IconButton::new(Icon::Lock, Tone::File).label(t!("Guardar como administrador")).framed()).clicked() {
+                        if ui.add(IconButton::new(Icon::Lock, Tone::File).label(t!("Guardar como administrador")).framed().primary()).clicked() {
                             let (tx, rx) = channel();
                             let (p, b, c) = (path.clone(), data.clone(), ctx.clone());
                             std::thread::spawn(move || {
@@ -1579,7 +1586,7 @@ impl App {
                     ui.label(t!("El almacén tiene cambios sin guardar."));
                     ui.add_space(8.0);
                     ui.horizontal(|ui| {
-                        if ui.add(IconButton::new(Icon::Save, Tone::File).label(t!("Guardar")).framed()).clicked() {
+                        if ui.add(IconButton::new(Icon::Save, Tone::File).label(t!("Guardar")).framed().primary()).clicked() {
                             choice = Some(0);
                         }
                         if ui.button(t!("Descartar")).clicked() {
@@ -1620,7 +1627,7 @@ impl App {
                 let mut open = true;
                 modal(t!("Error")).open(&mut open).show(ctx, |ui| {
                     ui.set_width(420.0);
-                    crate::estilo::etiqueta(ui, Icon::Error, msg.as_str());
+                    crate::estilo::alerta(ui, crate::estilo::Tipo::Error, msg.as_str());
                     ui.add_space(6.0);
                     if ui.button(t!("Aceptar")).clicked() {
                         keep = false;
@@ -1689,7 +1696,7 @@ impl App {
                                     ui.selectable_value(&mut d.protocol, p, p.label());
                                 }
                             });
-                            let go = ui.add_enabled(!busy && !d.input.trim().is_empty(), IconButton::new(Icon::Download, Tone::Live).label(t!("Consultar")).framed()).clicked();
+                            let go = ui.add_enabled(!busy && !d.input.trim().is_empty(), IconButton::new(Icon::Download, Tone::Live).label(t!("Consultar")).framed().primary()).clicked();
                             if (go || enter) && !busy && !d.input.trim().is_empty() {
                                 start = true;
                             }
@@ -1701,7 +1708,11 @@ impl App {
                             let f = &c.fetched;
                             ui.add_space(4.0);
                             ui.weak(tf!("{h}:{p} · {pr} · el servidor mandó {n} certificados", h = f.host, p = f.port, pr = f.protocol.label(), n = f.chain.len()));
-                            ui.add_space(2.0);
+                            ui.add_space(4.0);
+                            let pal = Paleta::de(ui);
+                            Frame::new().fill(pal.codigo).stroke(Stroke::new(1.0, pal.borde)).corner_radius(8.0).inner_margin(Margin::symmetric(12, 10)).show(ui, |ui| {
+                            ui.set_width(ui.available_width());
+                            ui.spacing_mut().item_spacing.y = 6.0;
                             for (level, text) in diag::checks(c, v, *rec, now) {
                                 let (icon, color) = match level {
                                     diag::Level::Ok => (Icon::Check, green),
@@ -1715,6 +1726,7 @@ impl App {
                                 }
                                 crate::estilo::etiqueta(ui, icon, rt);
                             }
+                            });
                         }
                     }
                     AddMode::File => {
@@ -1744,7 +1756,8 @@ impl App {
                     }
                 }
                 if let Some(e) = &d.error {
-                    crate::estilo::etiqueta(ui, Icon::Error, RichText::new(e.as_str()).color(red));
+                    ui.add_space(4.0);
+                    crate::estilo::alerta(ui, crate::estilo::Tipo::Error, e);
                 }
                 if !d.candidates.is_empty() {
                     ui.add_space(6.0);
@@ -1752,7 +1765,10 @@ impl App {
                     ScrollArea::vertical().max_height(ctx.content_rect().height() * 0.5).auto_shrink([false, true]).show(ui, |ui| {
                         for (k, c) in d.candidates.iter_mut().enumerate() {
                             let existing = doc.ks.contains(&c.info.sha256).map(str::to_string);
-                            Frame::group(ui.style()).inner_margin(8.0).show(ui, |ui| {
+                            // Tarjeta; la marcada, con borde del color de la app.
+                            let pal = Paleta::de(ui);
+                            let stroke = if c.checked { Stroke::new(1.5, crate::estilo::acento()) } else { Stroke::new(1.0, pal.borde) };
+                            Frame::new().fill(pal.tarjeta).stroke(stroke).corner_radius(8.0).inner_margin(Margin::same(10)).outer_margin(Margin { bottom: 6, ..Default::default() }).show(ui, |ui| {
                                 ui.set_width(ui.available_width());
                                 ui.horizontal(|ui| {
                                     ui.add_enabled(existing.is_none(), Checkbox::without_text(&mut c.checked));
@@ -1814,7 +1830,7 @@ impl App {
                     }
                     ui.horizontal(|ui| {
                         let ok = !todo.is_empty() && todo.iter().all(|&k| doc.ks.find(&d.candidates[k].alias).is_none() && !d.candidates[k].alias.trim().is_empty());
-                        add = ui.add_enabled(ok, IconButton::new(Icon::Plus, Tone::Live).label(tf!("Agregar {n} al almacén", n = todo.len())).framed()).clicked();
+                        add = ui.add_enabled(ok, IconButton::new(Icon::Plus, Tone::Live).label(tf!("Agregar {n} al almacén", n = todo.len())).framed().primary()).clicked();
                     });
                 }
             });
@@ -1936,11 +1952,9 @@ impl App {
                 by_cn(&mut only_mine, &doc.ks);
                 ui.add_space(6.0);
                 ui.horizontal(|ui| {
-                    crate::estilo::etiqueta(ui, Icon::Check, RichText::new(tf!("En los dos: {n}", n = both)).color(green));
-                    ui.separator();
-                    ui.label(RichText::new(tf!("Solo en el otro: {n}", n = only_theirs.len())).color(if only_theirs.is_empty() { ui.visuals().text_color() } else { orange }).strong());
-                    ui.separator();
-                    ui.label(RichText::new(tf!("Solo en este: {n}", n = only_mine.len())).strong());
+                    crate::estilo::insignia(ui, &tf!("En los dos: {n}", n = both), green);
+                    crate::estilo::insignia(ui, &tf!("Solo en el otro: {n}", n = only_theirs.len()), if only_theirs.is_empty() { Paleta::de(ui).apagado } else { orange });
+                    crate::estilo::insignia(ui, &tf!("Solo en este: {n}", n = only_mine.len()), Paleta::de(ui).apagado);
                 });
                 ui.add_space(4.0);
                 let h = (ctx.content_rect().height() * 0.5).max(160.0);
@@ -1956,7 +1970,7 @@ impl App {
                 ui.columns(2, |cols| {
                     let ui = &mut cols[0];
                     ui.horizontal(|ui| {
-                        ui.strong(t!("Solo en el otro"));
+                        ui.label(RichText::new(t!("Solo en el otro").to_uppercase()).size(11.0).strong().color(Paleta::de(ui).apagado));
                         if !only_theirs.is_empty() {
                             if ui.small_button(t!("Todos")).clicked() {
                                 c.checked = only_theirs.iter().filter_map(|&i| other.entries[i].info.as_ref().map(|x| x.sha256.clone())).collect();
@@ -1987,7 +2001,7 @@ impl App {
                         }
                     });
                     let ui = &mut cols[1];
-                    ui.strong(t!("Solo en este"));
+                    ui.label(RichText::new(t!("Solo en este").to_uppercase()).size(11.0).strong().color(Paleta::de(ui).apagado));
                     ScrollArea::vertical().id_salt("solo_este").max_height(h).auto_shrink([false, true]).show(ui, |ui| {
                         if only_mine.is_empty() {
                             ui.weak(t!("(ninguno)"));
@@ -2002,7 +2016,7 @@ impl App {
                 });
                 ui.add_space(6.0);
                 let n = c.checked.iter().filter(|s| !mine.contains_key(s.as_str())).count();
-                copy = ui.add_enabled(n > 0, IconButton::new(Icon::Plus, Tone::Live).label(tf!("Copiar {n} a este almacén", n = n)).framed()).clicked();
+                copy = ui.add_enabled(n > 0, IconButton::new(Icon::Plus, Tone::Live).label(tf!("Copiar {n} a este almacén", n = n)).framed().primary()).clicked();
             });
         if copy {
             if let Some(other) = &c.other {
