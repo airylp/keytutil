@@ -171,7 +171,7 @@ Intermedio	Intermediate	Intermédiaire
 JKS o PKCS12 (cacerts, truststore, keystore)	JKS or PKCS12 (cacerts, truststore, keystore)	JKS ou PKCS12 (cacerts, truststore, keystore)
 Java no confiaría en este servidor: {m}	Java would not trust this server: {m}	Java ne ferait pas confiance à ce serveur : {m}
 Java ya confía en este servidor con este almacén.	Java already trusts this server with this keystore.	Java fait déjà confiance à ce serveur avec ce magasin.
-Java ⏷	Java ⏷	Java ⏷
+Java	Java	Java
 La de fábrica del cacerts de Java es «changeit».	The default one for Java's cacerts is "changeit".	Celui par défaut du cacerts de Java est « changeit ».
 Las aplicaciones Java dejarán de confiar en los servidores que dependan de ellos. El archivo no cambia hasta guardar.	Java applications will stop trusting servers that depend on them. The file does not change until you save.	Les applications Java ne feront plus confiance aux serveurs qui en dépendent. Le fichier ne change pas avant l'enregistrement.
 Las aplicaciones Java que usan este almacén deben conocer la contraseña (javax.net.ssl.trustStorePassword).	Java applications using this keystore must know the password (javax.net.ssl.trustStorePassword).	Les applications Java qui utilisent ce magasin doivent connaître le mot de passe (javax.net.ssl.trustStorePassword).

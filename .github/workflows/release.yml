@@ -98,8 +98,16 @@ jobs:
         shell: pwsh
         run: |
           cargo build --release --locked
+          # OpenGL por software (Mesa llvmpipe, de github.com/pal1000/mesa-dist-win): sin
+          # tarjeta gráfica utilizable (máquinas virtuales, Escritorio remoto) Windows solo
+          # da OpenGL 1.1 y la ventana no abriría. Junto al .exe, Windows usa esta opengl32.dll.
+          $mesa = "26.3.1"
+          Invoke-WebRequest "https://github.com/pal1000/mesa-dist-win/releases/download/$mesa/mesa3d-$mesa-release-msvc.7z" -OutFile mesa.7z
+          if ((Get-FileHash mesa.7z -Algorithm SHA256).Hash -ne "64E84CF13D67DD354640BF443ED0445E6A83AFD06A5729F0750B3744D633B3F1") { throw "mesa.7z: SHA-256 inesperado" }
+          7z e mesa.7z -otarget\release -y x64\opengl32.dll x64\libgallium_wgl.dll
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           New-Item -ItemType Directory -Force dist | Out-Null
-          Compress-Archive -Path target\release\keytutil.exe, README.md, LICENSE -DestinationPath "dist\keytutil-$env:VERSION-windows-x86_64.zip"
+          Compress-Archive -Path target\release\keytutil.exe, target\release\opengl32.dll, target\release\libgallium_wgl.dll, windows\MESA.txt, README.md, LICENSE -DestinationPath "dist\keytutil-$env:VERSION-windows-x86_64.zip"
           # Instalador (Inno Setup, windows/keytutil.iss): lo usan install.ps1 y el actualizador.
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }

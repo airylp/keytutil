@@ -1,0 +1,9 @@
+opengl32.dll y libgallium_wgl.dll: Mesa 3D 26.3.1 (controlador llvmpipe, OpenGL por software),
+compilación de https://github.com/pal1000/mesa-dist-win (mesa3d-26.3.1-release-msvc.7z, x64).
+
+keytutil dibuja su ventana con DirectX 12 / Vulkan y, si no puede, con OpenGL. En equipos sin
+tarjeta gráfica utilizable (máquinas virtuales, Escritorio remoto) Windows solo ofrece OpenGL 1.1
+y la ventana no abriría; con estas bibliotecas el dibujo se hace con el procesador.
+
+Licencias: Mesa — MIT (https://docs.mesa3d.org/license.html); LLVM, incluido en libgallium_wgl.dll —
+Apache-2.0 WITH LLVM-exception (https://llvm.org/LICENSE.txt).

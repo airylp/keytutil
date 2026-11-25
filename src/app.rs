@@ -557,7 +557,8 @@ impl App {
                 self.pick(Pick::Open, &ctx);
             }
             let mut open = None;
-            ui.menu_button(RichText::new(t!("Java ⏷")), |ui| {
+            // La flecha se pinta: «▾»/«⏷» no están en todas las fuentes (cuadro en Windows).
+            let java = ui.menu_button(RichText::new(format!("{}    ", t!("Java"))), |ui| {
                 if self.java.is_empty() {
                     ui.weak(t!("No se encontró ningún Java instalado"));
                 }
@@ -591,6 +592,9 @@ impl App {
             })
             .response
             .on_hover_text(t!("Los cacerts de los Java instalados y los almacenes recientes"));
+            let (c, h) = (pos2(java.rect.right() - 11.0, java.rect.center().y), 3.0);
+            let color = ui.style().interact(&java).text_color();
+            ui.painter().add(eframe::egui::Shape::convex_polygon(vec![pos2(c.x - h * 1.3, c.y - h * 0.6), pos2(c.x + h * 1.3, c.y - h * 0.6), pos2(c.x, c.y + h * 0.9)], color, Stroke::NONE));
             if let Some(p) = open {
                 self.open_path(p);
             }

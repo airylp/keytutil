@@ -50,6 +50,10 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "..\target\release\keytutil.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
+; OpenGL por software (Mesa llvmpipe) para equipos sin tarjeta gráfica utilizable.
+Source: "..\target\release\opengl32.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\target\release\libgallium_wgl.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "MESA.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\keytutil"; Filename: "{app}\keytutil.exe"
