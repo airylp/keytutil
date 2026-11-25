@@ -283,3 +283,46 @@ Agregado en esta sesión	Added in this session	Ajouté pendant cette session
 {f} (el actual)	{f} (current)	{f} (actuel)
 El almacén ya es {f}: se guarda en el mismo formato.	The keystore is already {f}: it is saved in the same format.	Le magasin est déjà en {f} : il est enregistré dans le même format.
 Se convertirá de {a} a {b}.	It will be converted from {a} to {b}.	Il sera converti de {a} en {b}.
+(elige un almacén)	(choose a keystore)	(choisissez un magasin)
+(ninguno)	(none)	(aucun)
+Agregar certificados no lo arregla: hay que corregirlo en el servidor	Adding certificates won't fix it: it has to be fixed on the server	Ajouter des certificats ne le corrige pas : il faut le corriger sur le serveur
+Almacenes	Keystores	Magasins
+Comparar almacenes	Compare keystores	Comparer des magasins
+Comparar con	Compare with	Comparer avec
+Comparar con:	Compare with:	Comparer avec :
+Comparar este almacén con otro (p. ej. el cacerts de otro Java o de otro servidor) y copiar los certificados que le falten	Compare this keystore with another (e.g. another Java's or another server's cacerts) and copy the certificates it lacks	Comparer ce magasin avec un autre (p. ex. le cacerts d'un autre Java ou d'un autre serveur) et copier les certificats qui lui manquent
+Comparar…	Compare…	Comparer…
+Conexión {pr}: {tls}	Connection {pr}: {tls}	Connexion {pr} : {tls}
+Contraseña del otro almacén:	Other keystore's password:	Mot de passe de l'autre magasin :
+Copiar {n} a este almacén	Copy {n} to this keystore	Copier {n} dans ce magasin
+El certificado es para {h}	The certificate is for {h}	Le certificat est pour {h}
+El certificado no es para {h} (es para: {n})	The certificate is not for {h} (it is for: {n})	Le certificat n'est pas pour {h} (il est pour : {n})
+El servidor manda certificados que sobran: {l}	The server sends unneeded certificates: {l}	Le serveur envoie des certificats superflus : {l}
+El servidor manda la cadena en desorden	The server sends the chain out of order	Le serveur envoie la chaîne dans le désordre
+El servidor manda las intermedias que hacen falta	The server sends the intermediates it needs	Le serveur envoie les intermédiaires nécessaires
+El servidor no manda la intermedia «{n}»: Java no puede armar la cadena aunque tenga la raíz	The server doesn't send the intermediate “{n}”: Java can't build the chain even if it has the root	Le serveur n'envoie pas l'intermédiaire « {n} » : Java ne peut pas construire la chaîne même s'il a la racine
+Elige otro almacén para ver qué certificados tiene uno y no el otro.	Choose another keystore to see which certificates one has and the other doesn't.	Choisissez un autre magasin pour voir quels certificats l'un a et pas l'autre.
+En los dos: {n}	In both: {n}	Dans les deux : {n}
+Java confía en este servidor con este almacén	Java trusts this server with this keystore	Java fait confiance à ce serveur avec ce magasin
+Ninguno	None	Aucun
+No se pudo completar la cadena hasta la raíz: {m}	Couldn't complete the chain up to the root: {m}	Impossible de compléter la chaîne jusqu'à la racine : {m}
+Se arregla agregando {r} «{n}» (ya está marcado abajo)	Fixed by adding {r} “{n}” (already checked below)	Corrigé en ajoutant {r} « {n} » (déjà coché ci-dessous)
+Solo en el otro	Only in the other	Seulement dans l'autre
+Solo en el otro: {n}	Only in the other: {n}	Seulement dans l'autre : {n}
+Solo en este	Only in this one	Seulement dans celui-ci
+Solo en este: {n}	Only in this one: {n}	Seulement dans celui-ci : {n}
+Todos los certificados de la cadena están vigentes	All certificates in the chain are valid	Tous les certificats de la chaîne sont valides
+demasiadas redirecciones	too many redirects	trop de redirections
+dirección no compatible: {u}	unsupported address: {u}	adresse non prise en charge : {u}
+el certificado del servidor	the server certificate	le certificat du serveur
+la intermedia	the intermediate	l'intermédiaire
+la raíz	the root	la racine
+no lo manda el servidor; descargado de la dirección que indica su certificado hijo	not sent by the server; downloaded from the address in its child certificate	non envoyé par le serveur ; téléchargé depuis l'adresse indiquée par son certificat enfant
+no lo manda el servidor; está en el cacerts de {j}	not sent by the server; found in the cacerts of {j}	non envoyé par le serveur ; présent dans le cacerts de {j}
+no se encontró «{n}»	“{n}” was not found	« {n} » introuvable
+no se pudo descargar «{n}»: {e}	couldn't download “{n}”: {e}	impossible de télécharger « {n} » : {e}
+respuesta HTTP no válida	invalid HTTP response	réponse HTTP invalide
+{u} respondió {c}	{u} answered {c}	{u} a répondu {c}
+«{n}» aún no es válido (desde {f})	“{n}” is not valid yet (from {f})	« {n} » n'est pas encore valide (à partir du {f})
+«{n}» vence en {d} días	“{n}” expires in {d} days	« {n} » expire dans {d} jours
+«{n}» venció el {f}	“{n}” expired on {f}	« {n} » a expiré le {f}

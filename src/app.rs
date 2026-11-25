@@ -3,7 +3,8 @@
 //! ventana «Agregar certificados» (de un servidor o de un archivo/texto).
 
 use crate::cert::{self, CertInfo};
-use crate::fetch::{self, Fetched, Protocol};
+use crate::diag::{self, Chain, Origin};
+use crate::fetch::{self, Protocol};
 use crate::icons::{Icon, IconButton, Tone};
 use crate::keystore::{Format, Keystore, Kind, OpenError};
 use crate::store::{self, Session};
@@ -59,6 +60,8 @@ struct Candidate {
     info: CertInfo,
     alias: String,
     checked: bool,
+    /// De dónde salió (consulta a un servidor).
+    origin: Option<Origin>,
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -71,21 +74,23 @@ struct AddDialog {
     mode: AddMode,
     input: String,
     protocol: Protocol,
-    pending: Option<Receiver<Result<Fetched, String>>>,
-    fetched: Option<Fetched>,
+    pending: Option<Receiver<Result<Chain, String>>>,
+    /// Cadena del servidor, completada hasta la raíz si se pudo.
+    chain: Option<Chain>,
     /// Texto pegado (modo archivo/texto) y de dónde vinieron los certificados.
     text: String,
     source: Option<String>,
     error: Option<String>,
     candidates: Vec<Candidate>,
-    /// ¿Java confiaría en el servidor con el almacén? (y con qué revisión se calculó).
-    verdict: Option<(u64, Result<(), String>)>,
+    /// ¿Java confiaría en el servidor con el almacén?, qué certificado lo
+    /// arreglaría y con qué revisión del almacén se calculó.
+    verdict: Option<(u64, Result<(), String>, Option<usize>)>,
     focus_input: bool,
 }
 
 impl AddDialog {
     fn new(mode: AddMode, input: String) -> AddDialog {
-        AddDialog { mode, input, protocol: Protocol::Auto, pending: None, fetched: None, text: String::new(), source: None, error: None, candidates: vec![], verdict: None, focus_input: true }
+        AddDialog { mode, input, protocol: Protocol::Auto, pending: None, chain: None, text: String::new(), source: None, error: None, candidates: vec![], verdict: None, focus_input: true }
     }
 
     /// Prepara los candidatos: alias libres y marcados los que convenga agregar.
@@ -96,7 +101,7 @@ impl AddDialog {
             let Ok(info) = CertInfo::parse(&der) else { continue };
             let alias = cert::alias_for(&info.cn, &|a| taken.iter().any(|t| t == a));
             taken.push(alias.clone());
-            self.candidates.push(Candidate { der, info, alias, checked: false });
+            self.candidates.push(Candidate { der, info, alias, checked: false, origin: None });
         }
         // Servidor: la CA más alta que mandó (sigue valiendo cuando renueve su
         // certificado); si solo mandó el suyo, ese. Archivo: todos.
@@ -118,6 +123,39 @@ impl AddDialog {
     }
 }
 
+/// «Comparar almacenes»: el abierto contra otro.
+#[derive(Default)]
+struct Compare {
+    path: Option<PathBuf>,
+    /// Contenido del otro almacén mientras se pide su contraseña.
+    data: Option<Vec<u8>>,
+    password: String,
+    error: Option<String>,
+    other: Option<Keystore>,
+    /// Huellas SHA-256 marcadas para copiar (de los que solo están en el otro).
+    checked: BTreeSet<String>,
+}
+
+impl Compare {
+    fn load(&mut self, path: PathBuf) {
+        *self = Compare::default();
+        match std::fs::read(&path) {
+            Err(e) => self.error = Some(tf!("No se pudo leer {f}: {e}", f = path.display(), e = e)),
+            Ok(data) => match Keystore::open(&data, "") {
+                Ok((ks, _)) => self.other = Some(ks),
+                Err(OpenError::Password) => self.data = Some(data),
+                Err(OpenError::Invalid(e)) => self.error = Some(tf!("No se pudo abrir {f}: {e}", f = path.display(), e = e)),
+            },
+        }
+        self.path = Some(path);
+    }
+}
+
+/// Huella SHA-256 → índice, de las entradas con certificado.
+fn prints(ks: &Keystore) -> std::collections::BTreeMap<&str, usize> {
+    ks.entries.iter().enumerate().filter_map(|(i, e)| e.info.as_ref().map(|inf| (inf.sha256.as_str(), i))).collect()
+}
+
 enum Next {
     Close,
     Open(PathBuf),
@@ -128,6 +166,7 @@ enum Dialog {
     Settings,
     Password { path: PathBuf, data: Vec<u8>, input: String, error: Option<String>, show: bool, focus: bool },
     Add(Box<AddDialog>),
+    Compare(Box<Compare>),
     SaveAs { format: Format, password: String },
     NewStore { format: Format, password: String },
     ChangePassword { input: String, show: bool },
@@ -149,6 +188,7 @@ enum Pick {
     AddFile,
     SaveAs { format: Format, password: String },
     Export(Vec<String>),
+    Compare,
 }
 
 pub struct App {
@@ -385,6 +425,7 @@ impl App {
                 let name = self.doc.as_ref().and_then(|d| d.path.as_ref()).and_then(|p| p.file_stem()).map(|s| s.to_string_lossy().into_owned()).unwrap_or_else(|| "cacerts".into());
                 Box::pin(d.set_title(t!("Guardar almacén como")).set_file_name(format!("{name}.{ext}")).save_file())
             }
+            Pick::Compare => Box::pin(d.set_title(t!("Comparar con")).add_filter(t!("Almacenes"), &["jks", "p12", "pfx", "keystore", "truststore", "ks"]).add_filter(t!("Todos"), &["*"]).pick_file()),
             Pick::Export(aliases) => {
                 let name = if aliases.len() == 1 { format!("{}.pem", aliases[0]) } else { "certificados.pem".into() };
                 Box::pin(d.set_title(t!("Exportar certificados")).set_file_name(name).add_filter("PEM", &["pem", "crt"]).add_filter(t!("DER (binario, uno solo)"), &["der", "cer"]).save_file())
@@ -413,6 +454,11 @@ impl App {
                     },
                     Pick::SaveAs { format, password } => self.write_to(path, format, Some(password), ctx),
                     Pick::Export(aliases) => self.export(&aliases, &path),
+                    Pick::Compare => {
+                        if let Some(Dialog::Compare(c)) = &mut self.dialog {
+                            c.load(path);
+                        }
+                    }
                 }
             }
         }
@@ -421,18 +467,21 @@ impl App {
             if let Some(r) = d.pending.as_ref().and_then(|rx| rx.try_recv().ok()) {
                 d.pending = None;
                 match r {
-                    Ok(f) => {
+                    Ok(c) => {
                         self.session.last_server = Some(d.input.trim().to_string());
                         self.session_dirty = true;
                         d.error = None;
                         if let Some(doc) = &self.doc {
-                            d.set_candidates(f.chain.clone(), &doc.ks);
+                            d.set_candidates(c.links.iter().map(|l| l.der.clone()).collect(), &doc.ks);
+                            for (cand, l) in d.candidates.iter_mut().zip(&c.links) {
+                                cand.origin = Some(l.origin.clone());
+                            }
                         }
-                        d.fetched = Some(f);
+                        d.chain = Some(c);
                     }
                     Err(e) => {
                         d.error = Some(e);
-                        d.fetched = None;
+                        d.chain = None;
                         d.candidates.clear();
                     }
                 }
@@ -468,11 +517,21 @@ impl App {
         }
     }
 
-    fn start_fetch(d: &mut AddDialog, ctx: &Context) {
+    /// Dónde buscar los emisores que el servidor no manda: el almacén abierto
+    /// y los cacerts de los otros Java instalados.
+    fn pool(&self) -> diag::Pool {
+        let current = self.doc.as_ref().and_then(|d| d.path.as_ref()).and_then(|p| p.canonicalize().ok());
+        diag::Pool {
+            store: self.doc.as_ref().map(|d| d.ks.anchors().map(<[u8]>::to_vec).collect()).unwrap_or_default(),
+            java: self.java.iter().filter(|j| j.path.canonicalize().ok() != current).map(|j| (j.label.clone(), j.path.clone())).collect(),
+        }
+    }
+
+    fn start_fetch(d: &mut AddDialog, ctx: &Context, pool: diag::Pool) {
         let (tx, rx) = channel();
         let (input, protocol, ctx) = (d.input.clone(), d.protocol, ctx.clone());
         std::thread::spawn(move || {
-            let _ = tx.send(fetch::fetch(&input, protocol));
+            let _ = tx.send(diag::run(&input, protocol, pool));
             ctx.request_repaint();
         });
         d.pending = Some(rx);
@@ -488,7 +547,7 @@ impl App {
         if let Ok(h) = std::env::var("KEYUTIL_SERVIDOR") {
             if self.screenshot.is_some() {
                 d.input = h;
-                Self::start_fetch(&mut d, ctx);
+                Self::start_fetch(&mut d, ctx, self.pool());
             }
         }
         self.dialog = Some(Dialog::Add(Box::new(d)));
@@ -621,6 +680,9 @@ impl App {
             if ui.add_enabled(has_doc, IconButton::new(Icon::Plus, Tone::Live).label(t!("De un archivo…"))).on_hover_text(t!("Agregar certificados de un archivo .pem, .crt, .cer o .der (también se pueden arrastrar o pegar con Ctrl+V)")).clicked() {
                 self.pick(Pick::AddFile, &ctx);
             }
+            if ui.add_enabled(has_doc, IconButton::new(Icon::Results, Tone::Tool).label(t!("Comparar…"))).on_hover_text(t!("Comparar este almacén con otro (p. ej. el cacerts de otro Java o de otro servidor) y copiar los certificados que le falten")).clicked() {
+                self.dialog = Some(Dialog::Compare(Box::default()));
+            }
             ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                 if ui.add(IconButton::new(Icon::Gear, Tone::Neutral).selected(matches!(self.dialog, Some(Dialog::Settings)))).on_hover_text(t!("Ajustes")).clicked() {
                     self.dialog = if matches!(self.dialog, Some(Dialog::Settings)) { None } else { Some(Dialog::Settings) };
@@ -639,7 +701,7 @@ impl App {
                     }
                 }
                 if has_doc {
-                    let r = ui.add(TextEdit::singleline(&mut self.filter).hint_text(t!("Buscar (alias, nombre, emisor, huella)…")).desired_width(260.0));
+                    let r = ui.add(TextEdit::singleline(&mut self.filter).hint_text(t!("Buscar (alias, nombre, emisor, huella)…")).desired_width(200.0));
                     if self.focus_filter {
                         r.request_focus();
                         self.focus_filter = false;
@@ -1193,6 +1255,7 @@ impl App {
                 keep &= open;
             }
             Dialog::Add(a) => keep = self.add_dialog(ctx, a),
+            Dialog::Compare(c) => keep = self.compare_dialog(ctx, c),
             Dialog::SaveAs { .. } | Dialog::NewStore { .. } => {
                 let new = matches!(d, Dialog::NewStore { .. });
                 let (Dialog::SaveAs { format, password } | Dialog::NewStore { format, password }) = &mut d else { unreachable!() };
@@ -1402,19 +1465,23 @@ impl App {
         let now = cert::now();
         let Some(doc) = &mut self.doc else { return false };
         // Veredicto de confianza (se recalcula si cambió el almacén).
-        if let Some(f) = &d.fetched {
-            if d.verdict.as_ref().is_none_or(|(rev, _)| *rev != doc.rev) {
+        if let Some(c) = &d.chain {
+            if d.verdict.as_ref().is_none_or(|(rev, _, _)| *rev != doc.rev) {
                 let first = d.verdict.is_none();
-                let v = fetch::trusted(&f.chain, doc.ks.anchors(), &f.host);
-                // Si Java ya confía en el servidor, no hace falta agregar nada.
-                if first && v.is_ok() {
-                    for c in &mut d.candidates {
-                        c.checked = false;
+                let anchors: Vec<&[u8]> = doc.ks.anchors().collect();
+                let v = fetch::trusted(&c.fetched.chain, anchors.iter().copied(), &c.fetched.host);
+                let rec = if v.is_err() { c.recommended(&anchors) } else { None };
+                // Se marca solo lo que lo arregla (nada si Java ya confía o si
+                // agregar no sirve de nada).
+                if first {
+                    for (k, cand) in d.candidates.iter_mut().enumerate() {
+                        cand.checked = rec == Some(k);
                     }
                 }
-                d.verdict = Some((doc.rev, v));
+                d.verdict = Some((doc.rev, v, rec));
             }
         }
+        let mut start = false;
         let mut add = false;
         let mut pick_file = false;
         let (red, orange, green) = colors_for(ctx.global_style().visuals.dark_mode);
@@ -1449,23 +1516,29 @@ impl App {
                             });
                             let go = ui.add_enabled(!busy && !d.input.trim().is_empty(), IconButton::new(Icon::Download, Tone::Live).label(t!("Consultar")).framed()).clicked();
                             if (go || enter) && !busy && !d.input.trim().is_empty() {
-                                Self::start_fetch(d, ctx);
+                                start = true;
                             }
                             if busy {
                                 ui.spinner();
                             }
                         });
-                        if let Some(f) = &d.fetched {
+                        if let (Some(c), Some((_, v, rec))) = (&d.chain, &d.verdict) {
+                            let f = &c.fetched;
                             ui.add_space(4.0);
                             ui.weak(tf!("{h}:{p} · {pr} · el servidor mandó {n} certificados", h = f.host, p = f.port, pr = f.protocol.label(), n = f.chain.len()));
-                            match d.verdict.as_ref().map(|(_, v)| v) {
-                                Some(Ok(())) => {
-                                    crate::estilo::etiqueta(ui, Icon::Check, RichText::new(t!("Java ya confía en este servidor con este almacén.")).color(green).strong());
+                            ui.add_space(2.0);
+                            for (level, text) in diag::checks(c, v, *rec, now) {
+                                let (icon, color) = match level {
+                                    diag::Level::Ok => (Icon::Check, green),
+                                    diag::Level::Warn => (Icon::Warning, orange),
+                                    diag::Level::Bad => (Icon::Error, red),
+                                };
+                                let strong = level != diag::Level::Ok || text == t!("Java confía en este servidor con este almacén");
+                                let mut rt = RichText::new(text).color(color);
+                                if strong {
+                                    rt = rt.strong();
                                 }
-                                Some(Err(why)) => {
-                                    crate::estilo::etiqueta(ui, Icon::Warning, RichText::new(tf!("Java no confiaría en este servidor: {m}", m = why)).color(orange).strong());
-                                }
-                                None => {}
+                                crate::estilo::etiqueta(ui, icon, rt);
                             }
                         }
                     }
@@ -1521,6 +1594,17 @@ impl App {
                                         ui.label(RichText::new(role).small().strong().color(crate::estilo::acento()));
                                     }
                                     ui.add(Label::new(RichText::new(&c.info.cn).strong()).truncate());
+                                    let from = match &c.origin {
+                                        Some(Origin::Java(j)) => Some((tf!("no lo manda el servidor; está en el cacerts de {j}", j = j), None)),
+                                        Some(Origin::Aia(u)) => Some((t!("no lo manda el servidor; descargado de la dirección que indica su certificado hijo").to_string(), Some(u.clone()))),
+                                        _ => None,
+                                    };
+                                    if let Some((text, tip)) = from {
+                                        let r = ui.label(RichText::new(text).small().color(orange));
+                                        if let Some(u) = tip {
+                                            r.on_hover_text(u);
+                                        }
+                                    }
                                 });
                                 ui.horizontal_wrapped(|ui| {
                                     ui.add_space(24.0);
@@ -1585,6 +1669,198 @@ impl App {
         if pick_file {
             self.pick(Pick::AddFile, ctx);
             return false;
+        }
+        if start {
+            let pool = self.pool();
+            Self::start_fetch(d, ctx, pool);
+        }
+        open
+    }
+
+    /// Ventana «Comparar almacenes». Devuelve si sigue abierta.
+    fn compare_dialog(&mut self, ctx: &Context, c: &mut Compare) -> bool {
+        let mut open = true;
+        let now = cert::now();
+        let (mut pick_file, mut load, mut copy) = (false, None, false);
+        let current = self.doc.as_ref().and_then(|d| d.path.as_ref()).and_then(|p| p.canonicalize().ok());
+        // Opciones: los cacerts de los Java instalados y los almacenes recientes.
+        let mut choices: Vec<(String, PathBuf)> = self.java.iter().map(|j| (format!("Java · {}", j.label), j.path.clone())).collect();
+        for p in self.session.recent.iter().filter(|p| p.is_file()) {
+            choices.push((p.display().to_string(), p.clone()));
+        }
+        let mut seen = BTreeSet::new();
+        choices.retain(|(_, p)| {
+            let real = p.canonicalize().unwrap_or_else(|_| p.clone());
+            Some(&real) != current.as_ref() && seen.insert(real)
+        });
+        let Some(doc) = &mut self.doc else { return false };
+        let (red, orange, green) = colors_for(ctx.global_style().visuals.dark_mode);
+        Window::new(t!("Comparar almacenes"))
+            .id(Id::NULL.with("comparar"))
+            .open(&mut open)
+            .collapsible(false)
+            .resizable(true)
+            .default_width(780.0)
+            .pivot(Align2::CENTER_CENTER)
+            .default_pos(ctx.content_rect().center())
+            .show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label(t!("Comparar con:"));
+                    let sel = c.path.as_ref().map(|p| p.display().to_string()).unwrap_or_else(|| t!("(elige un almacén)").into());
+                    ComboBox::from_id_salt("comparar_con").selected_text(sel).width((ui.available_width() - 170.0).max(200.0)).show_ui(ui, |ui| {
+                        if choices.is_empty() {
+                            ui.weak(t!("No se encontró ningún Java instalado"));
+                        }
+                        for (label, p) in &choices {
+                            if ui.selectable_label(c.path.as_ref() == Some(p), label).on_hover_text(p.display().to_string()).clicked() {
+                                load = Some(p.clone());
+                            }
+                        }
+                    });
+                    if ui.add(IconButton::new(Icon::Open, Tone::File).label(t!("Elegir archivo…")).framed()).clicked() {
+                        pick_file = true;
+                    }
+                });
+                if let Some(data) = &c.data {
+                    let mut try_open = false;
+                    ui.horizontal(|ui| {
+                        ui.label(t!("Contraseña del otro almacén:"));
+                        let r = ui.add(TextEdit::singleline(&mut c.password).password(true).desired_width(220.0));
+                        try_open = (r.lost_focus() && ui.input(|i| i.key_pressed(Key::Enter))) | ui.button(t!("Abrir")).clicked();
+                    });
+                    if try_open {
+                        match Keystore::open(data, &c.password) {
+                            Ok((ks, _)) => {
+                                c.other = Some(ks);
+                                c.error = None;
+                            }
+                            Err(e) => c.error = Some(e.to_string()),
+                        }
+                    }
+                    if c.other.is_some() {
+                        c.data = None;
+                    }
+                }
+                if let Some(e) = &c.error {
+                    crate::estilo::etiqueta(ui, Icon::Error, RichText::new(e.as_str()).color(red));
+                }
+                let Some(other) = &c.other else {
+                    if c.path.is_none() {
+                        ui.add_space(4.0);
+                        ui.weak(t!("Elige otro almacén para ver qué certificados tiene uno y no el otro."));
+                    }
+                    return;
+                };
+                let (mine, theirs) = (prints(&doc.ks), prints(other));
+                let only_theirs: Vec<usize> = theirs.iter().filter(|(k, _)| !mine.contains_key(*k)).map(|(_, &i)| i).collect();
+                let only_mine: Vec<usize> = mine.iter().filter(|(k, _)| !theirs.contains_key(*k)).map(|(_, &i)| i).collect();
+                let both = mine.len() - only_mine.len();
+                let by_cn = |v: &mut Vec<usize>, ks: &Keystore| v.sort_by_key(|&i| ks.entries[i].info.as_ref().map(|x| x.cn.to_lowercase()).unwrap_or_default());
+                let (mut only_theirs, mut only_mine) = (only_theirs, only_mine);
+                by_cn(&mut only_theirs, other);
+                by_cn(&mut only_mine, &doc.ks);
+                ui.add_space(6.0);
+                ui.horizontal(|ui| {
+                    crate::estilo::etiqueta(ui, Icon::Check, RichText::new(tf!("En los dos: {n}", n = both)).color(green));
+                    ui.separator();
+                    ui.label(RichText::new(tf!("Solo en el otro: {n}", n = only_theirs.len())).color(if only_theirs.is_empty() { ui.visuals().text_color() } else { orange }).strong());
+                    ui.separator();
+                    ui.label(RichText::new(tf!("Solo en este: {n}", n = only_mine.len())).strong());
+                });
+                ui.add_space(4.0);
+                let h = (ctx.content_rect().height() * 0.5).max(160.0);
+                let row = |ui: &mut Ui, e: &crate::keystore::Entry| {
+                    let Some(info) = &e.info else { return };
+                    ui.vertical(|ui| {
+                        ui.add(Label::new(RichText::new(&info.cn).strong()).truncate());
+                        let d = info.days_left(now);
+                        let col = if d < 0 { red } else if d < SOON_DAYS { orange } else { ui.visuals().weak_text_color() };
+                        ui.label(RichText::new(format!("{} · {}", e.alias, expiry_text(info, now))).small().color(col));
+                    });
+                };
+                ui.columns(2, |cols| {
+                    let ui = &mut cols[0];
+                    ui.horizontal(|ui| {
+                        ui.strong(t!("Solo en el otro"));
+                        if !only_theirs.is_empty() {
+                            if ui.small_button(t!("Todos")).clicked() {
+                                c.checked = only_theirs.iter().filter_map(|&i| other.entries[i].info.as_ref().map(|x| x.sha256.clone())).collect();
+                            }
+                            if ui.small_button(t!("Ninguno")).clicked() {
+                                c.checked.clear();
+                            }
+                        }
+                    });
+                    ScrollArea::vertical().id_salt("solo_otro").max_height(h).auto_shrink([false, true]).show(ui, |ui| {
+                        if only_theirs.is_empty() {
+                            ui.weak(t!("(ninguno)"));
+                        }
+                        for &i in &only_theirs {
+                            let e = &other.entries[i];
+                            let Some(sha) = e.info.as_ref().map(|x| x.sha256.clone()) else { continue };
+                            ui.horizontal(|ui| {
+                                let mut on = c.checked.contains(&sha);
+                                if ui.add(Checkbox::without_text(&mut on)).changed() {
+                                    if on {
+                                        c.checked.insert(sha.clone());
+                                    } else {
+                                        c.checked.remove(&sha);
+                                    }
+                                }
+                                row(ui, e);
+                            });
+                        }
+                    });
+                    let ui = &mut cols[1];
+                    ui.strong(t!("Solo en este"));
+                    ScrollArea::vertical().id_salt("solo_este").max_height(h).auto_shrink([false, true]).show(ui, |ui| {
+                        if only_mine.is_empty() {
+                            ui.weak(t!("(ninguno)"));
+                        }
+                        for &i in &only_mine {
+                            ui.horizontal(|ui| {
+                                ui.add_space(24.0);
+                                row(ui, &doc.ks.entries[i]);
+                            });
+                        }
+                    });
+                });
+                ui.add_space(6.0);
+                let n = c.checked.iter().filter(|s| !mine.contains_key(s.as_str())).count();
+                copy = ui.add_enabled(n > 0, IconButton::new(Icon::Plus, Tone::Live).label(tf!("Copiar {n} a este almacén", n = n)).framed()).clicked();
+            });
+        if copy {
+            if let Some(other) = &c.other {
+                let mut n = 0;
+                let mut last = None;
+                for sha in std::mem::take(&mut c.checked) {
+                    let Some(e) = other.entries.iter().find(|e| e.info.as_ref().is_some_and(|x| x.sha256 == sha)) else { continue };
+                    let (Some(der), Some(info)) = (e.der(), &e.info) else { continue };
+                    if doc.ks.contains(&sha).is_some() {
+                        continue;
+                    }
+                    let alias = if doc.ks.find(&e.alias).is_none() { e.alias.clone() } else { cert::alias_for(&info.cn, &|a| doc.ks.find(a).is_some()) };
+                    match doc.ks.add(&alias, der.to_vec()) {
+                        Ok(()) => {
+                            n += 1;
+                            doc.added.insert(alias.trim().to_lowercase());
+                            last = Some(alias.to_lowercase());
+                        }
+                        Err(e) => self.avisos.error(e),
+                    }
+                }
+                if n > 0 {
+                    doc.changed(true);
+                    self.focus = last.and_then(|a| doc.ks.find(&a)).map(|i| doc.ks.entries[i].alias.clone());
+                    self.avisos.exito(tf!("Agregados {n} certificados. Guarda (Ctrl+S) para escribirlos en el archivo.", n = n));
+                }
+            }
+        }
+        if let Some(p) = load {
+            c.load(p);
+        }
+        if pick_file {
+            self.pick(Pick::Compare, ctx);
         }
         open
     }
@@ -1712,6 +1988,14 @@ impl App {
             }
             if std::env::var_os("KEYUTIL_SERVIDOR").is_some() {
                 self.open_add_server(ctx);
+            }
+            if let Ok(f) = std::env::var("KEYUTIL_COMPARAR") {
+                let mut c = Compare::default();
+                c.load(f.into());
+                if let Some(o) = &c.other {
+                    c.checked = o.entries.iter().filter_map(|e| e.info.as_ref().map(|x| x.sha256.clone())).take(2).collect();
+                }
+                self.dialog = Some(Dialog::Compare(Box::new(c)));
             }
             if let Ok(f) = std::env::var("KEYUTIL_PEGAR") {
                 if let Ok(ders) = std::fs::read(&f).map_err(|e| e.to_string()).and_then(|b| cert::parse_many(&b)) {

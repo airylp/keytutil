@@ -5,6 +5,7 @@
 mod i18n;
 mod app;
 mod cert;
+mod diag;
 mod estilo;
 mod fetch;
 mod icon;

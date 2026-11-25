@@ -203,6 +203,85 @@ pub fn parse_many(bytes: &[u8]) -> Result<Vec<Vec<u8>>, String> {
     Ok(out)
 }
 
+/// Datos para enlazar un certificado con su emisor.
+#[derive(Clone, Debug, Default)]
+pub struct Links {
+    pub subject: Vec<u8>,
+    pub issuer: Vec<u8>,
+    /// Identificador de la clave propia (SKI) y de la del emisor (AKI).
+    pub ski: Option<Vec<u8>>,
+    pub aki: Option<Vec<u8>>,
+    /// Dónde se publica el certificado del emisor (AIA «caIssuers», http://…).
+    pub ca_issuers: Vec<String>,
+}
+
+impl Links {
+    pub fn of(der: &[u8]) -> Option<Links> {
+        let (_, c) = X509Certificate::from_der(der).ok()?;
+        let mut l = Links { subject: c.subject().as_raw().to_vec(), issuer: c.issuer().as_raw().to_vec(), ..Default::default() };
+        for ext in c.extensions() {
+            match ext.parsed_extension() {
+                ParsedExtension::SubjectKeyIdentifier(k) => l.ski = Some(k.0.to_vec()),
+                ParsedExtension::AuthorityKeyIdentifier(a) => l.aki = a.key_identifier.as_ref().map(|k| k.0.to_vec()),
+                ParsedExtension::AuthorityInfoAccess(aia) => {
+                    for d in &aia.accessdescs {
+                        if d.access_method.to_id_string() == "1.3.6.1.5.5.7.48.2" {
+                            if let GeneralName::URI(u) = &d.access_location {
+                                l.ca_issuers.push(u.to_string());
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        Some(l)
+    }
+
+    pub fn self_signed(&self) -> bool {
+        self.subject == self.issuer && (self.aki.is_none() || self.aki == self.ski)
+    }
+
+    /// ¿`parent` es el emisor de este? (nombre y, si ambos lo dicen, clave).
+    pub fn issued_by(&self, parent: &Links) -> bool {
+        self.issuer == parent.subject && match (&self.aki, &parent.ski) {
+            (Some(a), Some(s)) => a == s,
+            _ => true,
+        }
+    }
+}
+
+/// Certificados dentro de un DER cualquiera (p. ej. un PKCS#7 «.p7c» como
+/// los que publican algunas autoridades): busca las secuencias que lo sean.
+pub fn certs_in_der(data: &[u8]) -> Vec<Vec<u8>> {
+    fn walk(mut d: &[u8], out: &mut Vec<Vec<u8>>, depth: u32) {
+        while d.len() >= 2 && depth < 12 {
+            let tag = d[0];
+            let (len, hdr) = match d[1] {
+                n if n < 0x80 => (n as usize, 2),
+                n => {
+                    let k = (n & 0x7f) as usize;
+                    if k == 0 || k > 4 || d.len() < 2 + k {
+                        return;
+                    }
+                    (d[2..2 + k].iter().fold(0usize, |a, &b| a << 8 | b as usize), 2 + k)
+                }
+            };
+            let Some(end) = hdr.checked_add(len).filter(|&e| e <= d.len()) else { return };
+            let tlv = &d[..end];
+            if tag == 0x30 && X509Certificate::from_der(tlv).is_ok_and(|(rest, _)| rest.is_empty()) {
+                out.push(tlv.to_vec());
+            } else if tag & 0x20 != 0 {
+                walk(&d[hdr..end], out, depth + 1);
+            }
+            d = &d[end..];
+        }
+    }
+    let mut out = Vec::new();
+    walk(data, &mut out, 0);
+    out
+}
+
 /// Alias para un certificado nuevo: su nombre común en minúsculas, sin
 /// caracteres raros, y distinto de los que ya hay (`-2`, `-3`…).
 pub fn alias_for(cn: &str, taken: &dyn Fn(&str) -> bool) -> String {

@@ -128,6 +128,8 @@ pub struct Fetched {
     pub protocol: Protocol,
     /// Como la manda el servidor: el suyo primero.
     pub chain: Vec<Vec<u8>>,
+    /// Versión de TLS y cifrado acordados («TLS 1.3 · TLS13_AES_256_GCM_SHA384»).
+    pub tls: String,
 }
 
 #[derive(Debug)]
@@ -201,9 +203,19 @@ pub fn fetch(input: &str, protocol: Protocol) -> Result<Fetched, String> {
     if chain.is_empty() {
         return Err(t!("el servidor no presentó ningún certificado").into());
     }
+    let version = match conn.protocol_version() {
+        Some(rustls::ProtocolVersion::TLSv1_3) => "TLS 1.3".to_string(),
+        Some(rustls::ProtocolVersion::TLSv1_2) => "TLS 1.2".to_string(),
+        Some(v) => format!("{v:?}"),
+        None => "TLS".to_string(),
+    };
+    let tls = match conn.negotiated_cipher_suite() {
+        Some(cs) => format!("{version} · {:?}", cs.suite()),
+        None => version,
+    };
     conn.send_close_notify();
     let _ = conn.complete_io(&mut tcp);
-    Ok(Fetched { host, port, protocol, chain })
+    Ok(Fetched { host, port, protocol, chain, tls })
 }
 
 /// Conversa en claro con el servidor de correo hasta que acepta STARTTLS.
@@ -275,6 +287,44 @@ fn starttls(tcp: &mut TcpStream, protocol: Protocol) -> Result<(), String> {
         return Err(tf!("el servidor {p} mandó datos inesperados después de aceptar STARTTLS", p = name));
     }
     Ok(())
+}
+
+/// Descarga por HTTP (sin TLS) lo que hay en `url`: los certificados de los
+/// emisores (AIA «caIssuers») se publican así. Sigue hasta 3 redirecciones.
+pub fn http_get(url: &str) -> Result<Vec<u8>, String> {
+    let mut url = url.trim().to_string();
+    for _ in 0..4 {
+        let rest = url.strip_prefix("http://").ok_or_else(|| tf!("dirección no compatible: {u}", u = url))?;
+        let (hostport, path) = match rest.find('/') {
+            Some(i) => (&rest[..i], &rest[i..]),
+            None => (rest, "/"),
+        };
+        let (host, port) = match hostport.rsplit_once(':') {
+            Some((h, p)) if !h.contains(']') || h.ends_with(']') => (h, p.parse::<u16>().map_err(|_| tf!("dirección no compatible: {u}", u = url))?),
+            _ => (hostport, 80),
+        };
+        let addr = (host.trim_matches(['[', ']']), port).to_socket_addrs().map_err(|e| tf!("no se encontró {h}: {e}", h = host, e = e))?.min_by_key(|a| a.is_ipv6()).ok_or_else(|| tf!("no se encontró {h}: {e}", h = host, e = "-"))?;
+        let mut tcp = TcpStream::connect_timeout(&addr, TIMEOUT).map_err(|e| tf!("no se pudo conectar a {h}:{p}: {e}", h = host, p = port, e = e))?;
+        tcp.set_read_timeout(Some(TIMEOUT)).ok();
+        tcp.set_write_timeout(Some(TIMEOUT)).ok();
+        write!(tcp, "GET {path} HTTP/1.0\r\nHost: {hostport}\r\nUser-Agent: keyutil\r\nAccept: */*\r\nConnection: close\r\n\r\n").map_err(|e| e.to_string())?;
+        let mut resp = Vec::new();
+        tcp.take(4 << 20).read_to_end(&mut resp).map_err(|e| e.to_string())?;
+        let end = resp.windows(4).position(|w| w == b"\r\n\r\n").ok_or_else(|| t!("respuesta HTTP no válida").to_string())?;
+        let head = String::from_utf8_lossy(&resp[..end]).to_string();
+        let status: u16 = head.split_whitespace().nth(1).and_then(|c| c.parse().ok()).unwrap_or(0);
+        if (300..400).contains(&status) {
+            if let Some(loc) = head.lines().find_map(|l| l.split_once(':').filter(|(k, _)| k.trim().eq_ignore_ascii_case("location")).map(|(_, v)| v.trim().to_string())) {
+                url = if loc.starts_with('/') { format!("http://{hostport}{loc}") } else { loc };
+                continue;
+            }
+        }
+        if status != 200 {
+            return Err(tf!("{u} respondió {c}", u = url, c = status));
+        }
+        return Ok(resp[end + 4..].to_vec());
+    }
+    Err(t!("demasiadas redirecciones").into())
 }
 
 /// ¿Confiaría Java en esta cadena con los certificados del almacén? `Ok(())`

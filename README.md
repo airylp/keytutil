@@ -27,10 +27,14 @@ Para compilarlo con lo último de `main`: `… | sh -s -- compilar`.
   SDKMAN, IntelliJ, Gradle…). Prueba la contraseña de fábrica, `changeit`.
 - **Agregar de un servidor**: escribe `servidor.ejemplo.com`, una URL `https://…`, `smtp://…:587`,
   `ldaps://…` o una URL `jdbc:…`. Trae la cadena (también con STARTTLS de SMTP, IMAP y POP3), dice si
-  Java **ya confía** en ese servidor con ese almacén (firmas, vigencia y nombre) y propone agregar
-  la autoridad más alta que mandó el servidor (sigue valiendo cuando renueve su certificado).
+  Java **ya confía** en ese servidor con ese almacén y, si no, por qué: nombre, vigencia, cadena en
+  desorden o incompleta (p. ej. el servidor no manda la intermedia). Completa la cadena hasta la raíz
+  con el almacén, los cacerts de los otros Java instalados o descargando los emisores (AIA), y marca
+  el certificado más alto que lo arregla (sigue valiendo cuando el servidor renueve el suyo).
 - **Agregar de un archivo** `.pem`, `.crt`, `.cer`, `.der` (uno o varios), pegando el PEM (Ctrl+V)
   o arrastrando el archivo a la ventana.
+- **Comparar** con otro almacén (el cacerts de otro Java, el de otro servidor…): qué tiene cada uno
+  que no tenga el otro, y copiar los que falten.
 - **Quitar** y **exportar** (PEM o DER) uno o varios a la vez; marcar los vencidos de un clic.
 - **Guardar** en el mismo archivo con una copia del original en la carpeta de respaldos; si el
   `cacerts` es del sistema, pide permisos de administrador (pkexec, macOS o UAC). **Guardar como**
