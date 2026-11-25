@@ -52,6 +52,25 @@ pub struct Session {
     /// Último servidor consultado (para no volver a escribirlo).
     #[serde(rename = "ultimo_servidor", default, skip_serializing_if = "Option::is_none")]
     pub last_server: Option<String>,
+    /// Colores de la lista de certificados («#rrggbb»); `None` = los del tema.
+    #[serde(rename = "lista_fondo", default, skip_serializing_if = "Option::is_none")]
+    pub list_bg: Option<String>,
+    #[serde(rename = "lista_letra", default, skip_serializing_if = "Option::is_none")]
+    pub list_fg: Option<String>,
+}
+
+/// «#rrggbb» → RGB.
+pub fn parse_hex(s: &str) -> Option<[u8; 3]> {
+    let h = s.trim().trim_start_matches('#');
+    if h.len() != 6 {
+        return None;
+    }
+    let v = u32::from_str_radix(h, 16).ok()?;
+    Some([(v >> 16) as u8, (v >> 8) as u8, v as u8])
+}
+
+pub fn to_hex(c: [u8; 3]) -> String {
+    format!("#{:02x}{:02x}{:02x}", c[0], c[1], c[2])
 }
 
 impl Session {
@@ -172,6 +191,15 @@ pub fn write_elevated(dest: &Path, data: &[u8]) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn hex_colors() {
+        assert_eq!(parse_hex("#0f172a"), Some([0x0f, 0x17, 0x2a]));
+        assert_eq!(parse_hex("FFFBEB"), Some([0xff, 0xfb, 0xeb]));
+        assert_eq!(parse_hex("#fff"), None);
+        assert_eq!(parse_hex("#zzzzzz"), None);
+        assert_eq!(to_hex([0x1e, 0x3a, 0x8a]), "#1e3a8a");
+    }
 
     #[test]
     fn recent_list_moves_to_front() {

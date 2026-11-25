@@ -326,3 +326,31 @@ respuesta HTTP no válida	invalid HTTP response	réponse HTTP invalide
 «{n}» aún no es válido (desde {f})	“{n}” is not valid yet (from {f})	« {n} » n'est pas encore valide (à partir du {f})
 «{n}» vence en {d} días	“{n}” expires in {d} days	« {n} » expire dans {d} jours
 «{n}» venció el {f}	“{n}” expired on {f}	« {n} » a expiré le {f}
+Agregado al almacén	Added to the keystore	Ajouté au magasin
+Autoridad (CA)	Authority (CA)	Autorité (CA)
+Clave privada	Private key	Clé privée
+Clave secreta	Secret key	Clé secrète
+Clave y firma	Key and signature	Clé et signature
+Correo	Email	E-mail
+De confianza	Trusted	De confiance
+Del tema	From theme	Du thème
+Desde	From	Du
+Estado o provincia	State or province	État ou province
+Fondo	Background	Fond
+Hasta	Until	Au
+Huellas	Fingerprints	Empreintes
+Identificador	Identifier	Identifiant
+Letra	Text	Texte
+Lista de certificados	Certificate list	Liste des certificats
+Localidad	Locality	Localité
+Nombres alternativos ({n})	Alternative names ({n})	Noms alternatifs ({n})
+Organización	Organization	Organisation
+Otro color	Other color	Autre couleur
+País	Country	Pays
+Por sí mismo (autofirmado)	By itself (self-signed)	Par lui-même (auto-signé)
+Se conserva tal cual al guardar.	Kept as is when saving.	Conservé tel quel à l'enregistrement.
+Si eliges solo el fondo, la letra se ajusta sola para que se lea bien.	If you only choose the background, the text adjusts itself to stay readable.	Si vous ne choisissez que le fond, le texte s'ajuste seul pour rester lisible.
+Unidad	Unit	Unité
+Vigencia	Validity	Validité
+Vigente · {t}	Valid · {t}	Valide · {t}
+vence {f}	expires {f}	expire le {f}
