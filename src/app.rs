@@ -2181,9 +2181,11 @@ impl App {
         let backups = store::backups_dir().map(|d| d.display().to_string()).unwrap_or_default();
         let label = crate::update::version_label();
         let version = crate::estilo::Version { etiqueta: &label, actualizable: crate::update::SUPPORTED };
+        let java = self.java.len().to_string();
         if crate::estilo::acerca(ctx, &mut self.show_about, &logo, &version, |ui| {
             crate::estilo::fila_carpeta(ui, t!("Configuración"), &config);
             crate::estilo::fila_carpeta(ui, t!("Respaldos"), &backups);
+            crate::estilo::fila_dato(ui, t!("Java encontrados"), &java);
         }) == crate::estilo::Accion::BuscarActualizaciones
         {
             self.open_updater(ctx);

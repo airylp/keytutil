@@ -370,3 +370,11 @@ ABIERTOS HACE POCO	RECENTLY OPENED	OUVERTS RÉCEMMENT
 Ubicación	Location	Emplacement
 No se pudo leer con la contraseña «changeit»	Could not be read with the password “changeit”	Impossible de le lire avec le mot de passe « changeit »
 Tu usuario no puede escribir en él: al guardar se pedirán permisos de administrador	Your user cannot write to it: saving will ask for administrator rights	Votre utilisateur ne peut pas y écrire : l’enregistrement demandera des droits d’administrateur
+Proyecto	Project	Projet
+Este equipo	This computer	Cet ordinateur
+Dibujo	Rendering	Rendu
+Copiar información	Copy information	Copier les informations
+Versión, sistema y carpetas, para pegarlos al reportar un problema	Version, system and folders, to paste when reporting a problem	Version, système et dossiers, à coller pour signaler un problème
+OpenGL (wgpu no disponible)	OpenGL (wgpu not available)	OpenGL (wgpu indisponible)
+Recuperación	Recovery	Récupération
+Java encontrados	Java found	Java trouvés
