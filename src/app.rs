@@ -323,7 +323,7 @@ fn color_row(ui: &mut Ui, label: &str, value: &mut Option<String>, swatches: &[[
         for &c in swatches {
             let (rect, r) = ui.allocate_exact_size(vec2(20.0, 20.0), Sense::click());
             let sel = cur == Some(c);
-            let stroke = if sel { Stroke::new(2.0, crate::estilo::acento()) } else { Stroke::new(1.0, ui.visuals().widgets.inactive.bg_stroke.color.gamma_multiply(2.0)) };
+            let stroke = if sel { Stroke::new(2.0, crate::estilo::acento()) } else { Stroke::new(1.0, Paleta::de(ui).borde_fuerte) };
             ui.painter().rect(rect.shrink(1.0), 5.0, rgb(c), stroke, StrokeKind::Inside);
             if r.on_hover_text(store::to_hex(c)).clicked() {
                 *value = Some(store::to_hex(c));
