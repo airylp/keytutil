@@ -46,7 +46,7 @@ Para compilarlo con lo último de `main`: `… | sh -s -- compilar`.
 Lo que escribe keyutil lo abren `keytool` de Java 8 y 21 sin errores de integridad (probado con
 los `cacerts` reales de ambos).
 
-![Un cacerts abierto, filtrado y con el detalle de un certificado (tema grafito oscuro)](docs/keyutil-oscuro.png)
+![Un cacerts abierto, filtrado y con el detalle de un certificado](docs/keyutil-certificado.png)
 
 ## Licencia
 
