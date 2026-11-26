@@ -4,6 +4,8 @@ Administra los certificados de confianza de Java (`cacerts`, *truststores*) sin 
 `keytool`: agregar los certificados de un servidor con un clic, quitar y exportar. App de escritorio
 en Rust + egui para macOS, Windows y Linux.
 
+![Pantalla inicial de keyutil con los cacerts encontrados (tema grafito claro)](docs/keyutil-inicio.png)
+
 ## Instalar
 
 macOS y Linux (descarga la última versión publicada; vuelve a ejecutarlo para actualizar o desinstalar):
@@ -43,6 +45,8 @@ Para compilarlo con lo último de `main`: `… | sh -s -- compilar`.
 
 Lo que escribe keyutil lo abren `keytool` de Java 8 y 21 sin errores de integridad (probado con
 los `cacerts` reales de ambos).
+
+![Un cacerts abierto, filtrado y con el detalle de un certificado (tema grafito oscuro)](docs/keyutil-oscuro.png)
 
 ## Licencia
 
