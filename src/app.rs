@@ -1338,7 +1338,7 @@ impl App {
                     ui.add_space(22.0);
                     // Cabecera: logo, nombre y para qué sirve.
                     ui.horizontal(|ui| {
-                        ui.add(Image::new(&logo).fit_to_exact_size(vec2(64.0, 64.0)));
+                        crate::estilo::imagen_logo(ui, &logo, 64.0);
                         ui.add_space(8.0);
                         ui.vertical(|ui| {
                             ui.add_space(4.0);
